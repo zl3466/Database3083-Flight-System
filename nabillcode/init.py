@@ -198,14 +198,24 @@ def public_flightSearch():
     query = "SELECT * FROM flight"
     search_string = ""
     param_keys = []
+    param_values = []
     for items in param_dict:
         if len(param_dict[items])>1:
             param_keys.append(items)
     if len(param_keys)>0:
         search_string = " WHERE {} = %s".format(param_keys[0])
-
-    
-    return render_template('public_viewflights.html',data=query, where=search_string)
+        param_values.append(param_dict[param_keys[0]])
+    if len(param_keys)>1:
+        for items in param_keys[1:]:
+            search_string += " and {} = %s".format(items)
+            param_values.append(param_dict[items])
+    param_tuple = tuple(param_values)
+    search = query + search_string
+    cursor = connection.cursor()
+    cursor.execute(search, param_tuple)
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('public_viewflights.html',data=search, where=data)
 
 @app.route('/public_viewflightsRT', methods=["POST"])
 def public_viewflightsRT():
