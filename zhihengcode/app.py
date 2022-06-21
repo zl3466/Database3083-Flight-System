@@ -116,6 +116,9 @@ def change_status():
 def change_status():
     return
 
+@app.route('/my_flight')
+def change_status():
+    return
 
 if __name__ == '__main__':
     app.run()

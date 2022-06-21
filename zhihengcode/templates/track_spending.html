@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="/view_flight_date_range" method="POST">
+<h2>Ticket Sales Record</h2>
+    <p>
+        <select name="display_period">
+            <option value="specific_period">Specific Period</option>
+            <option value="monthly">Past Month</option>
+            <option value="annual">Past Year</option>
+        </select>
+    </p>
+    {% if display_period=="specific_period" %}
+        <label for="start_date"> Start Date </label> </br>
+        <input type="date" name = "start_date" /> </br>
+        <label for="end_date"> End Date </label> </br>
+        <input type="date" name = "end_date" /> </br>
+    {% endif %}
+</form>
+
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+<table>
+    <th>Total Spent</th>
+
+{% for line in tickets %}
+	<tr>
+        <td>{{line['total_spent']}}</td>
+	</tr>
+{% endfor %}
+</table>
+
+<a href="/staff_home">Go back</a>
+</body>
+</html>

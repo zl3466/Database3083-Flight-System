@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+<table>
+    <th>Ticket ID</th>
+	<th>Source Airport</th>
+    <th>Destination Airport</th>
+
+{% for line in flights %}
+	<tr>
+        <td>{{line['ticket_id']}}</td>
+		<td>{{line['source_airport_name']}}</td>
+        <td>{{line['destination_airport_name']}}</td>
+        <td><input type="submit" value = Cancel /></td>
+	</tr>
+{% endfor %}
+</table>
+</form>>
+
+<a href="/customer_home">Go back</a>
+</body>
+</html>
