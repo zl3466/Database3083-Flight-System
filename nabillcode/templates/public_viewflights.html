@@ -7,6 +7,8 @@
     <title>View flights</title>
 </head>
 <body>
+    <a href="/public_viewflights"><button>One way</button></a>
+    <a href="/public_viewflightsRT"><button>Round trip</button></a>
     <h3>Search upcoming flights</h3>
     <form action="/public_flightsearch" method="POST">
         <label for="src_name">From (airport)</label><br> 
@@ -17,8 +19,15 @@
         <input type="date" name="departure_date"><br>
         <label for="departure_time">Departure time</label><br> 
         <input type="time" name="departure_time"><br>
+        {% if roundtrip %}
+        <label for="return_date" name="return_date">Departure date (return)</label><br>
+        <input type="date" name="return_date"><br>
+        <label for="return_time" name="return_time">Departure time (return)</label><br>
+        <input type="time" name="return_time"><br>
+        {% endif %}
         <input type="submit" value = Search><br>
     </form>
+    {% if data %}
     <h3>Upcoming Flights</h3>
     <table>
         <th>Airline</th>
@@ -40,6 +49,7 @@
         </tr>
         {% endfor %}
     </table>
+    {% endif %}
     <a href="/publicinfo">Go back</a>
 </body>
 </html>

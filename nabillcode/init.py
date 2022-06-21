@@ -1,4 +1,5 @@
 from crypt import methods
+from pickle import TRUE
 from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors, hashlib
 from datetime import timedelta
@@ -182,10 +183,12 @@ def public_viewFlights():
     # and storing 
     for each in data:
         src_port = each['src_name']
-    return render_template('public_viewflights.html', data = None)
+    return render_template('public_viewflights.html')
 
+# route for searching for flights (public)
 @app.route('/public_flightsearch', methods = ['GET','POST'])
 def public_flightSearch():
+    # dictionary for search parameters
     param_dict={}
     param_dict['src_name'] = request.form['src_name']
     param_dict['dst_name'] = request.form['dst_name']
@@ -193,7 +196,9 @@ def public_flightSearch():
     param_dict['departure_time'] = request.form['departure_time']
     query = "SELECT * FROM flight"
     search_string = ""
+    # list of search parameter keys
     param_keys = []
+    # list of search parameter values
     param_values = []
     for items in param_dict:
         if len(param_dict[items])>1:
@@ -213,9 +218,10 @@ def public_flightSearch():
     cursor.close()
     return render_template('public_viewflights.html', data=data)
 
-@app.route('/public_viewflightsRT', methods=["POST"])
+# round trip view flights route
+@app.route('/public_viewflightsRT', methods=["GET","POST"])
 def public_viewflightsRT():
-    return render_template('login.html')
+    return render_template('public_viewflights.html', roundtrip = TRUE)
 
 if __name__ == "__main__":
 	app.run('127.0.0.1', 5000, debug = True)
