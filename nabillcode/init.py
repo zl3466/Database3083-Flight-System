@@ -189,7 +189,7 @@ def public_viewFlights():
 @app.route('/public_flightsearch', methods = ['GET','POST'])
 def public_flightSearch():
     # dictionary for search parameters
-    param_dict={}
+    param_dict = {}
     param_dict['src_name'] = request.form['src_name']
     param_dict['dst_name'] = request.form['dst_name']
     param_dict['departure_date'] = request.form['departure_date']
@@ -222,6 +222,48 @@ def public_flightSearch():
 @app.route('/public_viewflightsRT', methods=["GET","POST"])
 def public_viewflightsRT():
     return render_template('public_viewflights.html', roundtrip = TRUE)
+
+# round trip search route
+@app.route('/public_flightsearchRT', methods = ['GET','POST'])
+def public_flightSearchRT():
+    # dictionary for search parameters
+    param_dict = {}
+    param_dict['src_name'] = request.form['src_name']
+    param_dict['dst_name'] = request.form['dst_name']
+    param_dict['departure_date'] = request.form['departure_date']
+    param_dict['departure_time'] = request.form['departure_time']
+    # dictionary for return search parameters
+    param_dictRT = {}
+    param_dictRT['dst_name'] = request.form['src_name']
+    param_dictRT['src_name'] = request.form['dst_name']
+    param_dictRT['departure_date'] = request.form['return_date']
+    param_dictRT['departure_time'] = request.form['return_time']
+    
+    query = "SELECT * FROM flight AS T, flight AS S WHERE T.src_name = S.dst_name\
+              and T.dst_name = S.src_name"
+    # query2 = "SELECT * FROM flight"
+    search_string = ""
+    # list of search parameter keys
+    param_keys = []
+    # list of search parameter values
+    param_values = []
+    for items in param_dict:
+        if len(param_dict[items])>1:
+            param_keys.append(items)
+    if len(param_keys)>0:
+        search_string = " WHERE {} = %s".format(param_keys[0])
+        param_values.append(param_dict[param_keys[0]])
+    if len(param_keys)>1:
+        for items in param_keys[1:]:
+            search_string += " and {} = %s".format(items)
+            param_values.append(param_dict[items])
+    param_tuple = tuple(param_values)
+    search = query + search_string
+    cursor = connection.cursor()
+    cursor.execute(search, param_tuple)
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('public_viewflights.html', data=data, roundtrip=TRUE)
 
 if __name__ == "__main__":
 	app.run('127.0.0.1', 5000, debug = True)

@@ -10,7 +10,11 @@
     <a href="/public_viewflights"><button>One way</button></a>
     <a href="/public_viewflightsRT"><button>Round trip</button></a>
     <h3>Search upcoming flights</h3>
+    {% if roundtrip %}
+    <form action="/public_flightsearchRT" method="POST">
+    {%else%}
     <form action="/public_flightsearch" method="POST">
+    {%endif%}
         <label for="src_name">From (airport)</label><br> 
         <input type="text" name="src_name"><br>
         <label for="dst_name">To (airport)</label><br> 
@@ -38,15 +42,26 @@
         <th>Departure time</th>
         <th>Arrival date</th>
         <th>Arrival time</th>
+        {%if roundtrip%}
+        <th>Departure date (return)</th>
+        <th>Departure time (return)</th>
+        <th>Arrival date (return)</th>
+        <th>Arrival time (return)</th>
+        {%endif%}
         {% for items in data %}
         <tr>
-            <td>{{items['airline_name']}}</td>
-            <td>{{items['src_name']}}</td>
-            <td>{{items['dst_name']}}</td>
-            <td>{{items['departure_date']}}</td>
-            <td>{{items['departure_time']}}</td>
-            <td>{{items['arrival_date']}}</td>
-            <td>{{items['arrival_time']}}</td>
+            <td>{{items['T.airline_name']}}</td>
+            <td>{{items['T.src_name']}}</td>
+            <td>{{items['T.dst_name']}}</td>
+            <td>{{items['T.departure_date']}}</td>
+            <td>{{items['T.departure_time']}}</td>
+            <td>{{items['T.arrival_date']}}</td>
+            <td>{{items['T.arrival_time']}}</td>
+            {%if roundtrip%}
+            <td>{{items['S.departure_date']}}</td>
+            <td>{{items['S.departure_time']}}</td>
+            
+            {%endif%}
         </tr>
         {% endfor %}
     </table>
