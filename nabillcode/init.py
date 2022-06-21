@@ -191,10 +191,6 @@ def public_flightSearch():
     param_dict['dst_name'] = request.form['dst_name']
     param_dict['departure_date'] = request.form['departure_date']
     param_dict['departure_time'] = request.form['departure_time']
-    # dst_name = request.form['dst_name']
-    # departure_date = request.form['departure_date']
-    # departure_time = request.form['departure_time']
-    # param_list = []
     query = "SELECT * FROM flight"
     search_string = ""
     param_keys = []
@@ -215,7 +211,7 @@ def public_flightSearch():
     cursor.execute(search, param_tuple)
     data = cursor.fetchall()
     cursor.close()
-    return render_template('public_viewflights.html',data=search, where=data)
+    return render_template('public_viewflights.html', data=data)
 
 @app.route('/public_viewflightsRT', methods=["POST"])
 def public_viewflightsRT():

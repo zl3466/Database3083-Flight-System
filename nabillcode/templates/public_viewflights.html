@@ -19,14 +19,27 @@
         <input type="time" name="departure_time"><br>
         <input type="submit" value = Search><br>
     </form>
-    {% if data %}
     <h3>Upcoming Flights</h3>
-    <!-- {% for items in data %}
-    <p>items</p>
-    {% endfor %} -->
-    {{data}}<br>
-    {{where}}<br>
-    {% endif %}
+    <table>
+        <th>Airline</th>
+        <th>To</th>
+        <th>From</th>
+        <th>Departure date</th>
+        <th>Departure time</th>
+        <th>Arrival date</th>
+        <th>Arrival time</th>
+        {% for items in data %}
+        <tr>
+            <td>{{items['airline_name']}}</td>
+            <td>{{items['src_name']}}</td>
+            <td>{{items['dst_name']}}</td>
+            <td>{{items['departure_date']}}</td>
+            <td>{{items['departure_time']}}</td>
+            <td>{{items['arrival_date']}}</td>
+            <td>{{items['arrival_time']}}</td>
+        </tr>
+        {% endfor %}
+    </table>
     <a href="/publicinfo">Go back</a>
 </body>
 </html>
