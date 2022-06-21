@@ -1,0 +1,52 @@
+<html>
+<head>
+</head>
+<br>
+
+<h1>{{ airline }}</h1>
+<h2>Welcome {{username}}</h2>
+
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+<form action="change_status" method="POST">
+<h2>Future Flights</h2>
+<table>
+	<th>Source City</th>
+	<th>Source Airport</th>
+    <th>Plane ID</th>
+	<th>Destination City</th>
+    <th>Destination Airport</th>
+    <th>Status</th>
+    <th>Change Status</th>
+
+{% for line in flights %}
+	<tr>
+		<td>{{line['source_city']}}</td>
+		<td>{{line['source_airport_name']}}</td>
+        <td>{{line['plane_id']}}</td>
+        <td>{{line['destination_city']}}</td>
+        <td>{{line['destination_airport_name']}}</td>
+        <td>{{line['status']}}</td>
+        <td><select name="change_status" >
+            <option value="null">Null</option>
+            <option value="On Time">On Time</option>
+            <option value="Delayed">Delayed</option>
+            </select>
+            <input type="submit" value = Confirm />
+        </td>
+	</tr>
+{% endfor %}
+</table>
+</form>
+<a href="/add_plane">Add Planek</a> </br>
+<a href="/add_flight">Add Flight</a> </br>
+<a href="/">Go back</a>
+
+</body>
+
+
+</html>
