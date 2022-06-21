@@ -196,24 +196,6 @@ def public_flightSearch():
     # departure_time = request.form['departure_time']
     # param_list = []
     query = "SELECT * FROM flight"
-    # search_string = ''
-    # for items in [src_name, dst_name, departure_date, departure_time]:
-    #     if len(str(items))>1:
-    #         param_list.append(str(items))
-    # search_statement = tuple(param_list)
-    # if len(param_list) > 0:
-    #     search_string += " WHERE  {} = %s".format(str(src_name))
-    # if len(param_list) > 1:
-    #     for items in param_list[1:0]:
-    #         search_string += "and {} = %s".format(str(items))
-    # cursor = connection.cursor()
-    # if len(search_string)>1:
-    #     query += search_string
-        # cursor.execute(query, search_statement)
-    # else:
-        # cursor.execute(query)
-    # data = cursor.fetchall()
-    # cursor.close()
     search_string = ""
     param_keys = []
     for items in param_dict:
