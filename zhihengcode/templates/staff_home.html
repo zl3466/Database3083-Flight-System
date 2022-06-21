@@ -12,8 +12,15 @@
 	}
 </style>
 
-<form action="change_status" method="POST">
+<form action="/change_status" method="POST">
+<form action="/view_flight_date_range" method="POST">
 <h2>Future Flights</h2>
+    <label for="start_date"> Start Date </label> </br>
+    <input type="date" name = "start_date" /> </br>
+    <label for="end_date"> End Date </label> </br>
+    <input type="date" name = "end_date" /> </br>
+</form>
+
 <table>
 	<th>Source City</th>
 	<th>Source Airport</th>

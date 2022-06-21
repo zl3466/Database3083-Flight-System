@@ -15,6 +15,16 @@ conn = pymysql.connect(host='localhost',
 def hello_world():  # put application's code here
     return 'Hello World!'
 
+#Define route for login
+@app.route('/login')
+def login():
+	return render_template('login.html')
+
+#Define route for register
+@app.route('/register')
+def register():
+	return render_template('register.html')
+
 
 @app.route('/loginAuth', methods=['GET', 'POST'])
 def loginAuth():
@@ -69,14 +79,42 @@ def registerAuth():
         cursor.close()
         return render_template('index.html')
 
+@app.route('/staff_home')
+def change_status():
+    return render_template('staff_home.html')
+
+@app.route('/view_flight_date_range')
+def view_date_range():
+    return
+
+@app.route('/change_statis')
+def change_status():
+    return
+
 @app.route('/add_plane')
 def go_add_plane():
     return render_template('add_plane.html')
+
+
 @app.route('/add_flight')
 def go_add_flight():
     return render_template('add_flight.html')
 
+@app.route('/add_airport')
+def change_status():
+    return
 
+@app.route('/view_ratings')
+def change_status():
+    return
+
+@app.route('/view_reports')
+def change_status():
+    return
+
+@app.route('/view_revenue')
+def change_status():
+    return
 
 
 if __name__ == '__main__':
