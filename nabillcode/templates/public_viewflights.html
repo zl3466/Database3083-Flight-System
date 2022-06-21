@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View flights</title>
+</head>
+<body>
+    <h3>Search upcoming flights</h3>
+    <form action="/public_flightsearch" method="POST">
+        <label for="src_name">From (airport)</label><br> 
+        <input type="text" name="src_name"><br>
+        <label for="dst_name">To (airport)</label><br> 
+        <input type="text" name="dst_name"><br>
+        <label for="departure_date">Departure date</label><br> 
+        <input type="date" name="departure_date"><br>
+        <label for="departure_time">Departure time</label><br> 
+        <input type="time" name="departure_time"><br>
+        <input type="submit" value = Search><br>
+    </form>
+    {% if data %}
+    <h3>Upcoming Flights</h3>
+    <!-- {% for items in data %}
+    <p>items</p>
+    {% endfor %} -->
+    {{data}}
+    {{where}}
+    {% endif %}
+    <a href="/publicinfo">Go back</a>
+</body>
+</html>
