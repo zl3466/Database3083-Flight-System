@@ -5,70 +5,10 @@
     <title>Title</title>
 </head>
 <body>
-<h1>Welcome {{username}}</h1>
-<a href="/my_flight">View My Flights</a> </br>
-
-<form action="/purchase" method="POST">
-<form action="/flight_search" method="POST">
-    <p>
-        <select name="travel_type">
-            <option value="one_way">One Way</option>
-            <option value="round_trip">Rount Trip</option>
-        </select>
-    </p>
-
-    <p>
-        <label for="departure_date"> Departure Date </label> </br>
-        <input type="date" name = "departure_date" />
-        <input type="time" name = "departure_time" /> </br>
-
-        {% if travel_type=="round_trip" %}
-            <label for="Return_date_time"> Return Date </label> </br>
-            <input type="date" name = "departure_date" />
-            <input type="time" name = "departure_time" /> </br>
-        {% endif %}
-    </p>
-
-    <p>
-        <label for="departure_city"> From </label> </br>
-        <input type="text" name = "departure_city" placeholder="City*" required/>
-        <input type="text" name = "departure_airport" placeholder="Airport"/></br>
-
-        <label for="destination_city"> To </label></br>
-        <input type="text" name = "destination_city" placeholder="City*" required/>
-        <input type="text" name = "destination_airport" placeholder="Airport"/></br>
-        <input type="submit" value = Search />
-    </p>
-</form>
-
-<style type="text/css">
-	table, th, td{
-		border: 1px solid black;
-	}
-</style>
-<table>
-	<th>Source City</th>
-	<th>Source Airport</th>
-    <th>Plane ID</th>
-	<th>Destination City</th>
-    <th>Destination Airport</th>
-    <th>Price</th>
-
-{% for line in flights %}
-	<tr>
-		<td>{{line['source_city']}}</td>
-		<td>{{line['source_airport_name']}}</td>
-        <td>{{line['plane_id']}}</td>
-        <td>{{line['destination_city']}}</td>
-        <td>{{line['destination_airport_name']}}</td>
-        <td>{{line['price']}}</td>
-        <td><input type="submit" value = Purchase /></td>
-	</tr>
-{% endfor %}
-</table>
-</form>
-
-<a href="/">Go back</a>
+    <h1>Welcome {{name}}</h1>
+    <a href="/my_flight"><button>View My Flights</button></a> </br>
+    <a href="/customer_searchflight">Search for flights</a>
+    <a href="/customer_trackspending">Track my spending</a>
 
 </body>
 </html>

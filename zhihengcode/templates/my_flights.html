@@ -12,16 +12,22 @@
 	}
 </style>
 <table>
-    <th>Ticket ID</th>
-	<th>Source Airport</th>
-    <th>Destination Airport</th>
+    <th>Airline Name</th>
+    <th>Flight Number</th>
+	<th>From</th>
+    <th>To</th>
+    <th>Departure Date</th>
+    <th>Departure Time</th>
 
-{% for line in flights %}
+{% for line in data %}
 	<tr>
-        <td>{{line['ticket_id']}}</td>
+        <td>{{line['airline_name']}}</td>
+        <td>{{line['flight_number']}}</td>
 		<td>{{line['source_airport_name']}}</td>
         <td>{{line['destination_airport_name']}}</td>
-        <td><input type="submit" value = Cancel /></td>
+        <td>{{line['departure_date']}}</td>
+        <td>{{line['departure_time']}}</td>
+        <td><a href="/create_ticket_session"><button>Cancel</button></a></td>
 	</tr>
 {% endfor %}
 </table>

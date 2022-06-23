@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<h3>Book Flights</h3>
+
+    <a href="/customer_oneway"><button>One way</button></a>
+    <a href="/customer_rt"><button>Round trip</button></a>
+
+    {% if round_trip %}
+        <form action="/customer_search_flight_rt" method="POST">
+    {%else%}
+        <form action="/customer_search_flight" method="POST">
+    {% endif %}
+            <p>
+                <label for="departure_date"> Departure Date </label> </br>
+                <input type="date" name = "departure_date" />
+                <input type="time" name = "departure_time" /> </br>
+
+                {% if round_trip %}
+                    <label for="Return_date_time"> Return Date </label> </br>
+                    <input type="date" name = "return_date" />
+                    <input type="time" name = "return_time" /> </br>
+                {% endif %}
+            </p>
+
+            <p>
+                <label for="departure_city"> From </label> </br>
+                <input type="text" name = "src_name" placeholder="Airport" required/></br>
+
+                <label for="destination_city"> To </label></br>
+                <input type="text" name = "dst_name" placeholder="Airport" required/></br>
+                <input type="submit" value = Search />
+            </p>
+    </form>
+
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+
+    <form action="/purchase" method="POST">
+    <table>
+        <th>Airline</th>
+        <th>Flight Number</th>
+        <th>Source Airport</th>
+        <th>Destination Airport</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Base Price</th>
+
+    {% for line in data %}
+        <tr>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_number']}}</td>
+            <td>{{line['src_name']}}</td>
+            <td>{{line['dst_name']}}</td>
+            <td>{{line['departure_date']}}</td>
+            <td>{{line['departure_time']}}</td>
+            <td>{{line['arrival_date']}}</td>
+            <td>{{line['arrival_time']}}</td>
+            <td>{{line['base_price']}}</td>
+            <td><a href="/purchase"><button>Purchase</button></a></td>
+        </tr>
+    {% endfor %}
+    </table>
+    </form>
+
+    <a href="/customer_home">Go back</a>
+
+</body>
+</html>

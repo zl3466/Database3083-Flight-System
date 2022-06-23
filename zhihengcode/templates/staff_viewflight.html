@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h3>Staff View Upcoming Flights</h3>
+    <form action="/staff_searchflight" method="POST">
+        <p>
+        <label for="start_date"> Start Date </label> </br>
+        <input type="date" name = "start_date" /> </br>
+        <label for="end_date"> End Date </label> </br>
+        <input type="date" name = "end_date" /> </br>
+        <input type="submit" value = Show />
+        </p>
+    </form>
+
+
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+
+    {% if data %}
+        <form action="/change_status" method="POST">
+        <table>
+        <th>Source City</th>
+        <th>Source Airport</th>
+        <th>Plane ID</th>
+        <th>Destination City</th>
+        <th>Destination Airport</th>
+        <th>Status</th>
+        <th>Change Status</th>
+
+        {% for line in flights %}
+            <tr>
+                <td>{{line['source_city']}}</td>
+                <td>{{line['source_airport_name']}}</td>
+                <td>{{line['plane_id']}}</td>
+                <td>{{line['destination_city']}}</td>
+                <td>{{line['destination_airport_name']}}</td>
+                <td>{{line['status']}}</td>
+                <td><select name="change_status" >
+                    <option value="null">Null</option>
+                    <option value="On Time">On Time</option>
+                    <option value="Delayed">Delayed</option>
+                    </select>
+                    <input type="submit" value = Confirm />
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+        </form>
+    {% endif %}
+    <a href="/staff_home">Go back</a>
+</body>
+</html>

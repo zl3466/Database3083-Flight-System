@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h3>Visitor Search Upcoming Flights</h3>
+
+    <a href="/public_oneway"><button>One way</button></a>
+    <a href="/public_rt"><button>Round trip</button></a>
+
+    {% if round_trip %}
+        <form action="/public_search_flight_rt" method="POST">
+    {%else%}
+        <form action="/public_search_flight" method="POST">
+    {% endif %}
+            <p>
+                <label for="departure_date"> Departure Date </label> </br>
+                <input type="date" name = "departure_date" />
+                <input type="time" name = "departure_time" /> </br>
+
+                {% if round_trip %}
+                    <label for="Return_date_time"> Return Date </label> </br>
+                    <input type="date" name = "return_date" />
+                    <input type="time" name = "return_time" /> </br>
+                {% endif %}
+            </p>
+
+            <p>
+                <label for="departure_city"> From </label> </br>
+                <input type="text" name = "src_name" placeholder="Airport" required/></br>
+
+                <label for="destination_city"> To </label></br>
+                <input type="text" name = "dst_name" placeholder="Airport" required/></br>
+                <input type="submit" value = Search />
+            </p>
+    </form>
+
+
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+
+    {% if data %}
+    <h3>Upcoming Flights</h3>
+    <table>
+        <th>Airline</th>
+        <th>Flight Number</th>
+        <th>Source Airport</th>
+        <th>Destination Airport</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+
+        {%if round_trip%}
+            <th>Airline</th>
+            <th>Flight Number</th>
+            <th>Departure Date</th>
+            <th>Departure Time</th>
+            <th>Arrival Date</th>
+            <th>Arrival Time</th>
+            <th>Total Base Price</th>
+        {% else %}
+            <th>Base Price</th>
+        {%endif%}
+
+        {% for items in data %}
+        <tr>
+            <td>{{items['T.airline_name']}}</td>
+            <td>{{items['T.flight_number']}}</td>
+            <td>{{items['T.src_name']}}</td>
+            <td>{{items['T.dst_name']}}</td>
+            <td>{{items['T.departure_date']}}</td>
+            <td>{{items['T.departure_time']}}</td>
+            <td>{{items['T.arrival_date']}}</td>
+            <td>{{items['T.arrival_time']}}</td>
+            {%if round_trip%}
+                <td>{{items['S.airline_name']}}</td>
+                <td>{{items['S.flight_number']}}</td>
+                <td>{{items['S.departure_date']}}</td>
+                <td>{{items['S.departure_time']}}</td>
+                <td>{{items['S.arrival_date']}}</td>
+                <td>{{items['S.arrival_time']}}</td>
+                <td>{{items['T.base_price']+items['S.base_price']}}</td>
+            {% else %}
+                <td>{{items['T.base_price']}}</td>
+            {%endif%}
+
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    <a href="/public_home">Go back</a>
+</body>
+</html>
