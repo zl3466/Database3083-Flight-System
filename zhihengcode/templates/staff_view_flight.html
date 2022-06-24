@@ -16,7 +16,6 @@
         </p>
     </form>
 
-
     <style type="text/css">
         table, th, td{
             border: 1px solid black;
@@ -24,7 +23,6 @@
     </style>
 
     {% if data %}
-
         <table>
         <th>Flight Number</th>
         <th>Plane ID</th>
@@ -41,13 +39,13 @@
                 <td>{{line['src_name']}}</td>
                 <td>{{line['dst_name']}}</td>
                 <td>{{line['status']}}</td>
-                <input type="text" name="flight_number" value={{line['flight_number']}} hidden>
-                <input type="text" name="departure_date" value={{line['departure_date']}} hidden>
-                <input type="text" name="departure_time" value={{line['departure_time']}} hidden>
+                <input type="text" name="flight_number" value="{{line['flight_number']}}" hidden>
+                <input type="text" name="departure_date" value="{{line['departure_date']}}" hidden>
+                <input type="text" name="departure_time" value="{{line['departure_time']}}" hidden>
                 <td><input type="text" name="status" list="status_choice">
                     <datalist id="status_choice" >
-                    <option value="on time">On Time</option>
-                    <option value="delayed">Delayed</option>
+                    <option value="on time"></option>
+                    <option value="delayed"></option>
                     </datalist>
                     <input type="submit" value = Confirm />
                 </td>

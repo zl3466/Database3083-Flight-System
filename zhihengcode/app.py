@@ -50,7 +50,6 @@ def customer_loginAuth():
     if data:
         # checking password (encoded)
         if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == password:
-        # if data['password'] == password:
             # setting session to current user
             session['email'] = email
             return redirect(url_for('customer_home'))
@@ -318,7 +317,6 @@ def customer_search_flight():
             param_values.append(param_dict[items])
     param_tuple = tuple(param_values)
     search = query + search_string
-    print(search, param_tuple)
     cursor = conn.cursor()
     cursor.execute(search, param_tuple)
     data = cursor.fetchall()
@@ -389,24 +387,64 @@ def customer_track_spending():
 # unfinished purchase()
 @app.route('/purchase', methods=['GET', 'POST'])
 def purchase():
-    username = session['username']
-    cursor = conn.cursor()
+    data = {}
+    data['airline_name'] = request.form['airline_name']
+    data['flight_number'] = request.form['flight_number']
+    data['departure_date'] = request.form['departure_date']
+    data['departure_time'] = request.form['departure_time']
+    data['base_price'] = request.form['base_price']
+    print(data['airline_name'])
+    print(data['flight_number'])
+    return render_template('purchase.html', data=data)
+
+
+@app.route('/make_purchase', methods=['GET', 'POST'])
+def make_purchase():
+    email = session['email']
+
+    # get payment info
+    card_type = request.form['card_type']
+    card_number = request.form['card_number']
+    card_name = request.form['card_name']
+    exp_date = request.form['exp_date']
+
+    # get flight info
     airline_name = request.form['airline_name']
     flight_number = request.form['flight_number']
     departure_date = request.form['departure_date']
     departure_time = request.form['departure_time']
+    base_price = request.form['base_price']
 
+    cursor = conn.cursor()
+
+    # get new ticket id
     query1 = 'select max(ticket_id) from ticket'
     cursor.execute(query1)
-    last_ticket_id = cursor.fetchone()
+    last_ticket = cursor.fetchone()
+
+    if len(last_ticket) > 0:
+        last_ticket_id = last_ticket['max(ticket_id)']
+    else:
+        last_ticket_id = 0
     new_ticket_id = last_ticket_id + 1
 
-    query2 = 'insert into ticket (ticket_id, airline_name, flight_number, departure_date, departure_time, sold_price) ' \
-             'values (%s, %s, %s, %s, %s, %s)'
-    cursor.execute(query2, (airline_name, flight_number, departure_date, departure_time,))
+    # get present timestamp
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    print((new_ticket_id, card_type, card_number, card_name, exp_date, valid_date,
+                            valid_time, email, airline_name, flight_number, departure_date, departure_time, base_price))
+
+    query2 = 'insert into ticket (ticket_id, card_type, card_number, card_name, exp_date, purchase_date, ' \
+             'purchase_time, email, airline_name, flight_number, departure_date, departure_time, sold_price)' \
+             'values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+    cursor.execute(query2, (new_ticket_id, card_type, card_number, card_name, exp_date, valid_date,
+                            valid_time, email, airline_name, flight_number, departure_date, departure_time, base_price))
     conn.commit()
     cursor.close()
-    return redirect(url_for('home'))
+    return render_template('customer_search_flight.html')
+
 
 
 # unfinished cancel_flight()
@@ -451,22 +489,6 @@ def staff_search_flight():
     end_date = request.form['end_date']
     query = "SELECT * FROM flight where airline_name=%s and ((departure_date>%s and departure_date<%s) " \
             "or departure_date=%s or departure_date=%s)"
-    # search_string = ""
-    # # list of search parameter keys
-    # param_keys = []
-    # # list of search parameter values
-    # param_values = []
-    # for items in param_dict:
-    #     if len(param_dict[items]) > 1:
-    #         param_keys.append(items)
-    # if len(param_keys) > 0:
-    #     for keys in param_keys:
-    #         search_string += " and {} = %s".format(keys)
-    #         param_values.append(param_dict[keys])
-    # # value of the first attribute is the airline name
-    # param_values.insert(0, session['airline_name'])
-    # param_tuple = tuple(param_values)
-    # search = query + search_string
     cursor = conn.cursor()
     cursor.execute(query, (session['airline_name'], start_date, end_date, start_date, end_date))
     data = cursor.fetchall()
