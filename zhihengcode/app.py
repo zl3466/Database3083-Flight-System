@@ -12,6 +12,7 @@ conn = pymysql.connect(host='localhost',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
 
+app.secret_key = 'some key that you will never guess'
 
 @app.route('/')
 def index():  # put application's code here
@@ -41,16 +42,18 @@ def customer_loginAuth():
     password = hashlib.md5(password.encode('utf-8')).hexdigest()
 
     cursor = conn.cursor()
-    query = 'SELECT password FROM customer WHERE username = %s'
+    query = 'SELECT password FROM customer WHERE email = %s'
     cursor.execute(query, email)
     data = cursor.fetchone()
+
     cursor.close()
     if data:
-        # checking password
-        if data['password'] == password:
+        # checking password (encoded)
+        if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == password:
+        # if data['password'] == password:
             # setting session to current user
             session['email'] = email
-            return redirect(url_for('cust_home'))
+            return redirect(url_for('customer_home'))
         # case: password does not match --> throw error
         else:
             return render_template('login.html', error="Incorrect password")
@@ -70,13 +73,13 @@ def staff_loginAuth():
     data = cursor.fetchone()
     query2 = 'SELECT airline_name FROM staff WHERE username=%s'
     cursor.execute(query2, username)
-    airline_name = cursor.fetchone()
+    airline_name = cursor.fetchone()['airline_name']
     cursor.close()
     if data:
-        if data['password'] == password:
+        if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == password:
             session['username'] = username
             session['airline_name'] = airline_name
-            return redirect(url_for('home'))
+            return redirect(url_for('staff_home'))
         else:
             return render_template('login.html', error="Incorrect password")
     else:
@@ -276,18 +279,18 @@ def customer_home():
     cursor = conn.cursor()
     query = 'SELECT name FROM customer WHERE email=%s'
     cursor.execute(query, email)
-    name = cursor.fetchone()
+    name = cursor.fetchone()['name']
     return render_template('customer_home.html', name=name)
 
 
 @app.route('/customer_oneway')
 def customer_oneway():
-    return render_template('customer_searchflight.html')
+    return render_template('customer_search_flight.html')
 
 
 @app.route('/customer_rt')
 def customer_rt():
-    return render_template('customer_searchflight.html', round_trip=True)
+    return render_template('customer_search_flight.html', round_trip=True)
 
 
 @app.route('/customer_search_flight', methods=['GET', 'POST'])
@@ -315,11 +318,12 @@ def customer_search_flight():
             param_values.append(param_dict[items])
     param_tuple = tuple(param_values)
     search = query + search_string
+    print(search, param_tuple)
     cursor = conn.cursor()
     cursor.execute(search, param_tuple)
     data = cursor.fetchall()
     cursor.close()
-    return render_template('customer_searchflight.html', data=data)
+    return render_template('customer_search_flight.html', data=data)
 
 
 @app.route('/customer_search_flight_rt', methods=['GET', 'POST'])
@@ -361,7 +365,25 @@ def customer_search_flight_rt():
     cursor.execute(search, param_tuple)
     data = cursor.fetchall()
     cursor.close()
-    return render_template('customer_searchflight.html', data=data, roundtrip=True)
+    return render_template('customer_search_flight.html', data=data, roundtrip=True)
+
+
+@app.route('/my_flight', methods=['GET', 'POST'])
+def my_flight():
+    email = session['email']
+    cursor = conn.cursor()
+    query = 'select * from ticket where email=%s'
+    cursor.execute(query, email)
+    data = cursor.fetchall()
+    for line in data:
+        session[line['ticket_id']] = line['ticket_id']
+    cursor.close()
+    return render_template('my_flights.html', data=data)
+
+
+@app.route('/customer_track_spending', methods=['GET', 'POST'])
+def customer_track_spending():
+    return
 
 
 # unfinished purchase()
@@ -387,19 +409,6 @@ def purchase():
     return redirect(url_for('home'))
 
 
-@app.route('/my_flight', methods=['GET', 'POST'])
-def my_flight():
-    email = session['email']
-    cursor = conn.cursor()
-    query = 'select * from ticket where email=%s'
-    cursor.execute(query, email)
-    data = cursor.fetchall()
-    for line in data:
-        session[line['ticket_id']] = line['ticket_id']
-    cursor.close()
-    return render_template('my_flights.html', data=data)
-
-
 # unfinished cancel_flight()
 @app.route('/cancel_flight', methods=['GET', 'POST'])
 def cancel_flight():
@@ -413,10 +422,9 @@ def staff_home():
     cursor = conn.cursor()
     query1 = 'SELECT first_name FROM staff WHERE username=%s'
     cursor.execute(query1, username)
-    first_name = cursor.fetchone()
+    first_name = cursor.fetchone()['first_name']
     airline_name = session['airline_name']
-    return render_template('customer_home.html', first_name=first_name, airline_name=airline_name)
-    return render_template('staff_home.html')
+    return render_template('staff_home.html', first_name=first_name, airline_name=airline_name)
 
 
 @app.route('/staff_view_flight', methods=['GET', 'POST'])
@@ -434,49 +442,54 @@ def staff_view_flight():
     cursor.execute(query, (valid_date, valid_date, valid_time, airline_name))
     data = cursor.fetchall()
     cursor.close()
-    return render_template('staff_viewflight.html', data=data)
+    return render_template('staff_view_flight.html', data=data)
 
 
 @app.route('/staff_search_flight', methods=['GET', 'POST'])
 def staff_search_flight():
-    param_dict = {}
-    param_dict['departure_date'] = request.form['departure_date']
-    param_dict['departure_time'] = request.form['departure_time']
-    query = "SELECT * FROM flight where airline_name=%s"
-    search_string = ""
-    # list of search parameter keys
-    param_keys = []
-    # list of search parameter values
-    param_values = []
-    for items in param_dict:
-        if len(param_dict[items]) > 1:
-            param_keys.append(items)
-    if len(param_keys) > 0:
-        for items in param_keys:
-            search_string += " and {} = %s".format(items)
-            param_values.append(param_dict[items])
-    # value of the first attribute is the airline name
-    param_values.insert(0, session['airline_name'])
-    param_tuple = tuple(param_values)
-    search = query + search_string
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+    query = "SELECT * FROM flight where airline_name=%s and ((departure_date>%s and departure_date<%s) " \
+            "or departure_date=%s or departure_date=%s)"
+    # search_string = ""
+    # # list of search parameter keys
+    # param_keys = []
+    # # list of search parameter values
+    # param_values = []
+    # for items in param_dict:
+    #     if len(param_dict[items]) > 1:
+    #         param_keys.append(items)
+    # if len(param_keys) > 0:
+    #     for keys in param_keys:
+    #         search_string += " and {} = %s".format(keys)
+    #         param_values.append(param_dict[keys])
+    # # value of the first attribute is the airline name
+    # param_values.insert(0, session['airline_name'])
+    # param_tuple = tuple(param_values)
+    # search = query + search_string
     cursor = conn.cursor()
-    cursor.execute(search, param_tuple)
+    cursor.execute(query, (session['airline_name'], start_date, end_date, start_date, end_date))
     data = cursor.fetchall()
     cursor.close()
-    return render_template('staff_viewflight.html', data=data)
+    return render_template('staff_view_flight.html', data=data)
 
 
 # unfinished change_status()
 @app.route('/change_status', methods=['GET', 'POST'])
 def change_status():
-    new_status = request.form['change_status']
-    if new_status != 'null':
+    new_status = request.form['status']
+    airline_name = session['airline_name']
+    flight_number = request.form['flight_number']
+    departure_date = request.form['departure_date']
+    departure_time = request.form['departure_time']
+    if new_status is not None:
         cursor = conn.cursor()
-        query = 'update flight set status=%s where '
-        cursor.execute(query, new_status)
+        query = 'update flight set status=%s where airline_name=%s and flight_number=%s ' \
+                'and departure_date=%s and departure_time=%s'
+        cursor.execute(query, (new_status, airline_name, flight_number, departure_date, departure_time))
         conn.commit()
         cursor.close()
-    return
+    return render_template('staff_view_flight.html')
 
 
 @app.route('/add_plane')
@@ -512,4 +525,4 @@ def view_revenue():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run('127.0.0.1', 5000, debug = True)

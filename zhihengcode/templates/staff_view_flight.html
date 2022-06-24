@@ -6,7 +6,7 @@
 </head>
 <body>
 <h3>Staff View Upcoming Flights</h3>
-    <form action="/staff_searchflight" method="POST">
+    <form action="/staff_search_flight" method="POST">
         <p>
         <label for="start_date"> Start Date </label> </br>
         <input type="date" name = "start_date" /> </br>
@@ -24,35 +24,37 @@
     </style>
 
     {% if data %}
-        <form action="/change_status" method="POST">
+
         <table>
-        <th>Source City</th>
-        <th>Source Airport</th>
+        <th>Flight Number</th>
         <th>Plane ID</th>
-        <th>Destination City</th>
-        <th>Destination Airport</th>
+        <th>From</th>
+        <th>To</th>
         <th>Status</th>
         <th>Change Status</th>
 
-        {% for line in flights %}
+        {% for line in data %}
+            <form action="/change_status" method="POST">
             <tr>
-                <td>{{line['source_city']}}</td>
-                <td>{{line['source_airport_name']}}</td>
+                <td>{{line['flight_number']}}</td>
                 <td>{{line['plane_id']}}</td>
-                <td>{{line['destination_city']}}</td>
-                <td>{{line['destination_airport_name']}}</td>
+                <td>{{line['src_name']}}</td>
+                <td>{{line['dst_name']}}</td>
                 <td>{{line['status']}}</td>
-                <td><select name="change_status" >
-                    <option value="null">Null</option>
-                    <option value="On Time">On Time</option>
-                    <option value="Delayed">Delayed</option>
-                    </select>
+                <input type="text" name="flight_number" value={{line['flight_number']}} hidden>
+                <input type="text" name="departure_date" value={{line['departure_date']}} hidden>
+                <input type="text" name="departure_time" value={{line['departure_time']}} hidden>
+                <td><input type="text" name="status" list="status_choice">
+                    <datalist id="status_choice" >
+                    <option value="on time">On Time</option>
+                    <option value="delayed">Delayed</option>
+                    </datalist>
                     <input type="submit" value = Confirm />
                 </td>
             </tr>
+            </form>
         {% endfor %}
         </table>
-        </form>
     {% endif %}
     <a href="/staff_home">Go back</a>
 </body>
