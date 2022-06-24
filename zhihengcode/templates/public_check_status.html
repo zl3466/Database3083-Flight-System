@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h3>Visitor Check Flight Status</h3>
+    <form action="/public_check_status" method="POST">
+        <p>
+            <label for="airline_name"> Airline Name </label> </br>
+            <input type="text" name = "airline_name" required/></br>
+
+            <label for="flight_number"> Flight Number </label> </br>
+            <input type="text" name = "flight_number" required/></br>
+
+            <label for="departure_date"> Departure Date </label> </br>
+            <input type="date" name = "departure_date" required/>
+            <input type="time" name = "departure_time" required/> </br>
+
+            <input type="submit" value = Check />
+        </p>
+    </form>
+
+
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+
+    {% if data %}
+    <h3>Flight Status</h3>
+    <table>
+        <th>Airline</th>
+        <th>Flight Number</th>
+        <th>Source Airport</th>
+        <th>Destination Airport</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+
+        {% for line in data %}
+        <tr>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_number']}}</td>
+            <td>{{line['src_name']}}</td>
+            <td>{{line['dst_name']}}</td>
+            <td>{{line['departure_date']}}</td>
+            <td>{{line['departure_time']}}</td>
+            <td>{{line['arrival_date']}}</td>
+            <td>{{line['arrival_time']}}</td>
+            <td>{{line['status']}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    <a href="/public_home">Go back</a>
+</body>
+</html>
