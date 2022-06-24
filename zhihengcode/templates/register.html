@@ -2,33 +2,12 @@
 <head>
 </head>
 <body>
-<form action="/registerAuth" method="POST">
+<a href="/customer_register"><button>Customer</button></a>
+<a href="/staff_register"><button>Staff</button></a>
+
+    {% if user_type=='customer' %}
     <p>
-    <select>
-      <option value="staff">Staff</option>
-      <option value="customer">Customer</option>
-    </select>
-    </p>
-
-	{% if user_type=="staff" %}
-        <h2>Staff Registration</h2>
-        <label for="username"> Staff Username </label></br>
-        <input type="text" name = "username" placeholder="username/email" required/> </br>
-
-        <label for="password"> Password </label></br>
-        <input type="password" name = "password" placeholder="password" required/></br>
-
-        <label for="fname"> Name </label></br>
-        <input type="text" name = "fname" placeholder="First Name" required/>
-        <input type="text" name = "lname" placeholder="Last Name" required/></br>
-
-        <label for="birthday"> Date of birth </label></br>
-        <input type="date" name = "birthday" placeholder="Date of birth" required/></br>
-
-        <label for="airline"> Airline </label></br>
-        <input type="text" name = "airline" placeholder="airline" required/></br>
-    {% else %}
-        <p>
+        <form action="/customer_registerAuth" method="POST">
         <h2>Customer Registration</h2>
         <h3>Personal Information</h3>
         <label for="email"> Email </label></br>
@@ -66,12 +45,36 @@
         <label for="birthday"> Date of birth </label></br>
         <input type="date" name = "birthday" placeholder="Date of birth" required/></br>
 
+        <input type="submit" value = Register />
+        </form>
+
+    {% else %}
+        <form action="/staff_registerAuth" method="POST">
+        <h2>Staff Registration</h2>
+        <label for="username"> Staff Username </label></br>
+        <input type="text" name = "username" placeholder="username/email" required/> </br>
+
+        <label for="password"> Password </label></br>
+        <input type="password" name = "password" placeholder="password" required/></br>
+
+        <label for="fname"> Name </label></br>
+        <input type="text" name = "fname" placeholder="First Name" required/>
+        <input type="text" name = "lname" placeholder="Last Name" required/></br>
+
+        <label for="birthday"> Date of birth </label></br>
+        <input type="date" name = "birthday" placeholder="Date of birth" required/></br>
+
+        <label for="airline"> Airline </label></br>
+        <input type="text" name = "airline" placeholder="airline" required/></br>
+
+        <input type="submit" value = Register />
+        </form>
     {% endif %}
-	<input type="submit" value = Register />
+
 	{% if error %}
 		<p class="error"><strong>Error:</strong> {{error}}</p>
 	{% endif %}
-</form>
-<a href="/">Go back</a>
+
+<a href="/public_home">Go back</a>
 </body>
 </html>

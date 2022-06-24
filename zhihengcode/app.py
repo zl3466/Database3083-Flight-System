@@ -18,115 +18,130 @@ def index():  # put application's code here
     return render_template('index.html')
 
 
-# Define route for login
+# ---------------------------------LOGIN-------------------------------------------
 @app.route('/login')
 def login():
     return render_template('login.html')
 
 
-# Define route for register
+@app.route('/customer_login')
+def customer_login():
+    return render_template('login.html', user_type='customer')
+
+
+@app.route('/staff_login')
+def staff_login():
+    return render_template('login.html', user_type='staff')
+
+
+@app.route('/customer_loginAuth', methods=['GET', 'POST'])
+def customer_loginAuth():
+    email = request.form['email']
+    password = request.form['password']
+    password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
+    cursor = conn.cursor()
+    query = 'SELECT password FROM customer WHERE username = %s'
+    cursor.execute(query, email)
+    data = cursor.fetchone()
+    cursor.close()
+    if data:
+        # checking password
+        if data['password'] == password:
+            # setting session to current user
+            session['email'] = email
+            return redirect(url_for('cust_home'))
+        # case: password does not match --> throw error
+        else:
+            return render_template('login.html', error="Incorrect password")
+    else:
+        return render_template('login.html', error="Invalid username")
+
+
+@app.route('/staff_loginAuth', methods=['GET', 'POST'])
+def staff_loginAuth():
+    username = request.form['username']
+    password = request.form['password']
+    password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
+    cursor = conn.cursor()
+    query = 'SELECT password FROM staff WHERE username = %s'
+    cursor.execute(query, username)
+    data = cursor.fetchone()
+    query2 = 'SELECT airline_name FROM staff WHERE username=%s'
+    cursor.execute(query2, username)
+    airline_name = cursor.fetchone()
+    cursor.close()
+    if data:
+        if data['password'] == password:
+            session['username'] = username
+            session['airline_name'] = airline_name
+            return redirect(url_for('home'))
+        else:
+            return render_template('login.html', error="Incorrect password")
+    else:
+        return render_template('login.html', error="Invalid username")
+
+
+# ---------------------------------REGISTER-------------------------------------------
 @app.route('/register')
 def register():
     return render_template('register.html')
 
 
-@app.route('/registerAuth', methods=['GET', 'POST'])
-def registerAuth():
-    identity = request.form['user_type']
+@app.route('/customer_register')
+def customer_register():
+    return render_template('register.html', user_type='customer')
 
-    # if customer register
-    if identity == 'customer':
-        email = request.form['email']
-        password = request.form['password']
-        # hashing passwrod with md5
-        password = hashlib.md5(password.encode('utf-8')).hexdigest()
-        cursor = conn.cursor()
-        # query to get data on registering user
-        query = 'SELECT * FROM customer WHERE email = %s'
-        cursor.execute(query, email)
-        data = cursor.fetchone()
 
-        # case: user data in database --> throw error
-        if (data):
-            return render_template('register.html', error="This user already exists")
-        else:
-            # case: user data not in database --> insert new user data
-            ins = 'INSERT INTO customer(email, password) VALUES(%s, %s)'
-            cursor.execute(ins, (email, password))
-            conn.commit()
-            cursor.close()
-            return render_template('index.html')
-    # elif staff register
+@app.route('/staff_register')
+def staff_register():
+    return render_template('register.html', user_type='staff')
+
+
+@app.route('/customer_registerAuth', methods=['GET', 'POST'])
+def customer_registerAuth():
+    email = request.form['email']
+    password = request.form['password']
+    # hashing passwrod with md5
+    password = hashlib.md5(password.encode('utf-8')).hexdigest()
+    cursor = conn.cursor()
+    # query to get data on registering user
+    query = 'SELECT * FROM customer WHERE email = %s'
+    cursor.execute(query, email)
+    data = cursor.fetchone()
+
+    # case: user data in database --> throw error
+    if (data):
+        return render_template('register.html', error="This user already exists")
     else:
-        username = request.form['username']
-        password = request.form['password']
-        password = hashlib.md5(password.encode('utf-8')).hexdigest()
-        cursor = conn.cursor()
-        query = 'SELECT * FROM staff WHERE username = %s'
-        cursor.execute(query, username)
-        data = cursor.fetchone()
-
-        if (data):
-            error = "This user already exists"
-            return render_template('register.html', error=error)
-        else:
-            ins = 'INSERT INTO staff(username, password) VALUES(%s, %s)'
-            cursor.execute(ins, (username, password))
-            conn.commit()
-            cursor.close()
-            return render_template('index.html')
-
-
-@app.route('/loginAuth', methods=['GET', 'POST'])
-def loginAuth():
-    identity = request.form['user_type']
-
-    # if customer login
-    if identity == 'customer':
-        email = request.form['email']
-        password = request.form['password']
-        password = hashlib.md5(password.encode('utf-8')).hexdigest()
-
-        cursor = conn.cursor()
-        query = 'SELECT password FROM customer WHERE username = %s'
-        cursor.execute(query, email)
-        data = cursor.fetchone()
+        # case: user data not in database --> insert new user data
+        ins = 'INSERT INTO customer(email, password) VALUES(%s, %s)'
+        cursor.execute(ins, (email, password))
+        conn.commit()
         cursor.close()
-        if (data):
-            # checking password
-            if data['password'] == password:
-                # setting session to current user
-                session['email'] = email
-                return redirect(url_for('cust_home'))
-            # case: password does not match --> throw error
-            else:
-                return render_template('login.html', error="Incorrect password")
-        else:
-            return render_template('login.html', error="Invalid username")
+        return render_template('index.html')
 
-    # elif staff login
+
+@app.route('/staff_registerAuth', methods=['GET', 'POST'])
+def staff_registerAuth():
+    username = request.form['username']
+    password = request.form['password']
+    password = hashlib.md5(password.encode('utf-8')).hexdigest()
+    cursor = conn.cursor()
+    query = 'SELECT * FROM staff WHERE username = %s'
+    cursor.execute(query, username)
+    data = cursor.fetchone()
+
+    if (data):
+        error = "This user already exists"
+        return render_template('register.html', error=error)
     else:
-        username = request.form['username']
-        password = request.form['password']
-        password = hashlib.md5(password.encode('utf-8')).hexdigest()
-
-        cursor = conn.cursor()
-        query = 'SELECT password FROM staff WHERE username = %s'
-        cursor.execute(query, username)
-        data = cursor.fetchone()
-        query2 = 'SELECT airline_name FROM staff WHERE username=%s'
-        cursor.execute(query2, username)
-        airline_name = cursor.fetchone()
+        ins = 'INSERT INTO staff(username, password) VALUES(%s, %s)'
+        cursor.execute(ins, (username, password))
+        conn.commit()
         cursor.close()
-        if (data):
-            if data['password'] == password:
-                session['username'] = username
-                session['airline_name'] = airline_name
-                return redirect(url_for('home'))
-            else:
-                return render_template('login.html', error="Incorrect password")
-        else:
-            return render_template('login.html', error="Invalid username")
+        return render_template('index.html')
 
 
 # ---------------------------------PUBLIC-------------------------------------------
@@ -145,7 +160,7 @@ def public_rt():
     return render_template('public_view_flight.html', round_trip=True)
 
 
-@app.route('/public_view_flight')
+@app.route('/public_view_flight', methods=['GET', 'POST'])
 def public_view_flight():
     # declaring timestamp for now
     timestamp = datetime.now()
@@ -166,7 +181,7 @@ def public_view_status():
     return render_template('public_check_status.html')
 
 
-@app.route('/public_check_status')
+@app.route('/public_check_status', methods=['GET', 'POST'])
 def public_check_status():
     airline_name = request.form['airline_name']
     flight_number = request.form['flight_number']
@@ -180,7 +195,7 @@ def public_check_status():
     return render_template('public_check_status.html', data=data)
 
 
-@app.route('/public_search_flight')
+@app.route('/public_search_flight', methods=['GET', 'POST'])
 def public_search_flight():
     param_dict = {}
     param_dict['src_name'] = request.form['src_name']
@@ -212,7 +227,7 @@ def public_search_flight():
     return render_template('public_searchflight.html', data=data)
 
 
-@app.route('/public_search_flight_rt')
+@app.route('/public_search_flight_rt', methods=['GET', 'POST'])
 def public_search_flight_rt():
     # dictionary for search parameters
     param_dict = {}
@@ -255,7 +270,7 @@ def public_search_flight_rt():
 
 
 # ---------------------------------CUSTOMER-------------------------------------------
-@app.route('/customer_home')
+@app.route('/customer_home', methods=['GET', 'POST'])
 def customer_home():
     email = session['email']
     cursor = conn.cursor()
@@ -275,7 +290,7 @@ def customer_rt():
     return render_template('customer_searchflight.html', round_trip=True)
 
 
-@app.route('/customer_search_flight')
+@app.route('/customer_search_flight', methods=['GET', 'POST'])
 def customer_search_flight():
     param_dict = {}
     param_dict['src_name'] = request.form['src_name']
@@ -307,7 +322,7 @@ def customer_search_flight():
     return render_template('customer_searchflight.html', data=data)
 
 
-@app.route('/customer_search_flight_rt')
+@app.route('/customer_search_flight_rt', methods=['GET', 'POST'])
 def customer_search_flight_rt():
     # dictionary for search parameters
     param_dict = {}
@@ -392,7 +407,7 @@ def cancel_flight():
 
 
 # ---------------------------------STAFF-------------------------------------------
-@app.route('/staff_home')
+@app.route('/staff_home', methods=['GET', 'POST'])
 def staff_home():
     username = session['username']
     cursor = conn.cursor()
@@ -404,7 +419,7 @@ def staff_home():
     return render_template('staff_home.html')
 
 
-@app.route('/staff_view_flight')
+@app.route('/staff_view_flight', methods=['GET', 'POST'])
 def staff_view_flight():
     # declaring timestamp for now
     timestamp = datetime.now()
@@ -422,7 +437,7 @@ def staff_view_flight():
     return render_template('staff_viewflight.html', data=data)
 
 
-@app.route('/staff_search_flight')
+@app.route('/staff_search_flight', methods=['GET', 'POST'])
 def staff_search_flight():
     param_dict = {}
     param_dict['departure_date'] = request.form['departure_date']
@@ -452,7 +467,7 @@ def staff_search_flight():
 
 
 # unfinished change_status()
-@app.route('/change_status')
+@app.route('/change_status', methods=['GET', 'POST'])
 def change_status():
     new_status = request.form['change_status']
     if new_status != 'null':
