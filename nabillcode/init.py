@@ -183,17 +183,21 @@ def public_viewFlights():
     # and storing 
     for each in data:
         src_port = each['src_name']
-    return render_template('public_viewflights.html')
+    return render_template('public_viewflights.html', today_date = valid_date)
 
 # route for searching for flights (public)
 @app.route('/public_flightsearch', methods = ['GET','POST'])
 def public_flightSearch():
+    # valid time/date
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
     # dictionary for search parameters
     param_dict = {}
     param_dict['src_name'] = request.form['src_name']
     param_dict['dst_name'] = request.form['dst_name']
     param_dict['departure_date'] = request.form['departure_date']
-    param_dict['departure_time'] = request.form['departure_time']
     query = "SELECT * FROM flight"
     search_string = ""
     # list of search parameter keys
@@ -216,7 +220,7 @@ def public_flightSearch():
     cursor.execute(search, param_tuple)
     data = cursor.fetchall()
     cursor.close()
-    return render_template('public_viewflights.html', data=data)
+    return render_template('public_viewflights.html', data=data, today_date = valid_date)
 
 # round trip view flights route
 @app.route('/public_viewflightsRT', methods=["GET","POST"])
@@ -239,8 +243,7 @@ def public_flightSearchRT():
     param_dictRT['departure_date'] = request.form['return_date']
     param_dictRT['departure_time'] = request.form['return_time']
     
-    query = "SELECT * FROM flight AS T, flight AS S WHERE T.src_name = S.dst_name\
-              and T.dst_name = S.src_name"
+    query1 = "SELECT * FROM flight"
     # query2 = "SELECT * FROM flight"
     search_string = ""
     # list of search parameter keys

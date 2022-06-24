@@ -20,14 +20,10 @@
         <label for="dst_name">To (airport)</label><br> 
         <input type="text" name="dst_name"><br>
         <label for="departure_date">Departure date</label><br> 
-        <input type="date" name="departure_date"><br>
-        <label for="departure_time">Departure time</label><br> 
-        <input type="time" name="departure_time"><br>
+        <input type="date" name="departure_date" min={{today_date}}><br>
         {% if roundtrip %}
         <label for="return_date" name="return_date">Departure date (return)</label><br>
-        <input type="date" name="return_date"><br>
-        <label for="return_time" name="return_time">Departure time (return)</label><br>
-        <input type="time" name="return_time"><br>
+        <input type="date" name="return_date" ><br>
         {% endif %}
         <input type="submit" value = Search><br>
     </form>
@@ -36,42 +32,8 @@
     <h3>Upcoming Flights</h3>
     <table>
         <th>Airline</th>
-        <th>To</th>
         <th>From</th>
-        <th>Departure date</th>
-        <th>Departure time</th>
-        <th>Arrival date</th>
-        <th>Arrival time</th><a href="/public_viewflights"><button>One way</button></a>
-    <a href="/public_viewflightsRT"><button>Round trip</button></a>
-    <h3>Search upcoming flights</h3>
-    {% if roundtrip %}
-    <form action="/public_flightsearchRT" method="POST">
-    {%else%}
-    <form action="/public_flightsearch" method="POST">
-    {%endif%}
-        <label for="src_name">From (airport)</label><br>
-        <input type="text" name="src_name"><br>
-        <label for="dst_name">To (airport)</label><br>
-        <input type="text" name="dst_name"><br>
-        <label for="departure_date">Departure date</label><br>
-        <input type="date" name="departure_date"><br>
-        <label for="departure_time">Departure time</label><br>
-        <input type="time" name="departure_time"><br>
-        {% if roundtrip %}
-        <label for="return_date" name="return_date">Departure date (return)</label><br>
-        <input type="date" name="return_date"><br>
-        <label for="return_time" name="return_time">Departure time (return)</label><br>
-        <input type="time" name="return_time"><br>
-        {% endif %}
-        <input type="submit" value = Search><br>
-    </form>
-    {{data}}
-    {% if data %}
-    <h3>Upcoming Flights</h3>
-    <table>
-        <th>Airline</th>
         <th>To</th>
-        <th>From</th>
         <th>Departure date</th>
         <th>Departure time</th>
         <th>Arrival date</th>
@@ -84,41 +46,16 @@
         {%endif%}
         {% for items in data %}
         <tr>
-            <td>{{items['T.airline_name']}}</td>
-            <td>{{items['T.src_name']}}</td>
-            <td>{{items['T.dst_name']}}</td>
-            <td>{{items['T.departure_date']}}</td>
-            <td>{{items['T.departure_time']}}</td>
-            <td>{{items['T.arrival_date']}}</td>
-            <td>{{items['T.arrival_time']}}</td>
+            <td>{{items['airline_name']}}</td>
+            <td>{{items['src_name']}}</td>
+            <td>{{items['dst_name']}}</td>
+            <td>{{items['departure_date']}}</td>
+            <td>{{items['departure_time']}}</td>
+            <td>{{items['arrival_date']}}</td>
+            <td>{{items['arrival_time']}}</td>
             {%if roundtrip%}
-            <td>{{items['S.departure_date']}}</td>
             <td>{{items['S.departure_time']}}</td>
-
-            {%endif%}
-        </tr>
-        {% endfor %}
-    </table>
-    {% endif %}
-    <a href="/publicinfo">Go back</a>
-        {%if roundtrip%}
-        <th>Departure date (return)</th>
-        <th>Departure time (return)</th>
-        <th>Arrival date (return)</th>
-        <th>Arrival time (return)</th>
-        {%endif%}
-        {% for items in data %}
-        <tr>
-            <td>{{items['T.airline_name']}}</td>
-            <td>{{items['T.src_name']}}</td>
-            <td>{{items['T.dst_name']}}</td>
-            <td>{{items['T.departure_date']}}</td>
-            <td>{{items['T.departure_time']}}</td>
-            <td>{{items['T.arrival_date']}}</td>
-            <td>{{items['T.arrival_time']}}</td>
-            {%if roundtrip%}
-            <td>{{items['S.departure_date']}}</td>
-            <td>{{items['S.departure_time']}}</td>
+            <td>{{items['S.arrival_time']}}</td>
             
             {%endif%}
         </tr>
