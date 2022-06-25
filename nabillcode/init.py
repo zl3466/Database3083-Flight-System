@@ -15,6 +15,9 @@ connection = pymysql.connect(host = 'localhost',
                              charset = 'utf8mb4',
                              port = 8889,
                              cursorclass = pymysql.cursors.DictCursor)
+
+# ---------------------------------MAIN-------------------------------------------
+
 # main route
 @app.route('/')
 def index():
@@ -30,6 +33,8 @@ def login():
 def register():
     return render_template('register.html')
 
+# ---------------------------------REGISTER-------------------------------------------
+
 # customer register route
 @app.route('/cust_register')
 def custRegister():
@@ -40,15 +45,6 @@ def custRegister():
 def staffRegister():
     return render_template('staff_register.html')
 
-# customer login route
-@app.route('/cust_login')
-def custLogin():
-    return render_template('cust_login.html')
-
-# staff login route
-@app.route('/staff_login')
-def staffLogin():
-    return render_template('staff_login.html')
 
 # customer registration authentication route
 # note: pattern similar to staff_registerAuth
@@ -70,14 +66,39 @@ def cust_registerAuth():
     # case: user data in database --> throw error
     if(data):
         error = "This user already exists"
+        cursor.close()
         return render_template('cust_register.html', error = error)
-    else:
+    
     # case: user data not in database --> insert new user data
+    else:
+        session['email'] = email
         ins = 'INSERT INTO customer(email, password) VALUES(%s, %s)'
         cursor.execute(ins, (email, password))
         connection.commit()
         cursor.close()
-        return render_template('index.html')
+        return render_template('cust_personal_info.html')
+
+@app.route('/cust_personal_info', methods=['GET','POST'])
+def cust_personal_info():
+    email = session['email']
+    info_dict = {}
+    info_dict['name'] = request.form['name']
+    info_dict['building_number'] = request.form['building_number']
+    info_dict['city'] = request.form['city']
+    info_dict['state'] = request.form['state']
+    info_dict['phone_number'] = request.form['phone_number']
+    info_dict['passport_number'] = request.form['passport_number']
+    info_dict['passport_country'] = request.form['passport_country']
+    info_dict['passport_expiration'] = request.form['passport_expiration']
+
+    cursor = connection.cursor()
+    for key in info_dict:
+        update = "UPDATE CUSTOMER SET {} = %s WHERE email = %s".format(key)
+        cursor.execute(update, (info_dict[key], email))
+        connection.commit()
+    cursor.close()
+
+    return render_template('cust_home.html')
 
 # staff registration authentication route 
 # note: pattern similar to cust_registerAuth
@@ -102,6 +123,18 @@ def staff_registerAuth():
         connection.commit()
         cursor.close()
         return render_template('index.html')
+
+# ---------------------------------LOGIN-------------------------------------------
+
+# customer login route
+@app.route('/cust_login')
+def custLogin():
+    return render_template('cust_login.html')
+
+# staff login route
+@app.route('/staff_login')
+def staffLogin():
+    return render_template('staff_login.html')
 
 # customer login authentication route
 # note: similar to staff_loginAuth
@@ -160,10 +193,7 @@ def staff_loginAuth():
         error = "Invalid username"
         return render_template('staff_login.html', error = error)
 
-# customer homepage route
-@app.route('/cust_home')
-def custHome():
-    return render_template('cust_home.html')
+# ---------------------------------PUBLIC-------------------------------------------
 
 # public information route
 @app.route('/publicinfo')
@@ -363,6 +393,33 @@ def public_flightSearchRT():
     return render_template('public_viewflights.html', data = outgoing, returning = returning, 
         today_date = valid_date, roundtrip = True, valid_return_date = valid_return_date,
         available = available)
+
+@app.route('/public_view_status')
+def public_view_status():
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_date = valid_timestamp.date()
+    return render_template('public_check_status.html', today_date = valid_date)
+
+
+@app.route('/public_check_status', methods=['GET', 'POST'])
+def public_check_status():
+    airline_name = request.form['airline_name']
+    flight_number = request.form['flight_number']
+    departure_date = request.form['departure_date']
+    arrival_date = request.form['arrival_date']
+
+    cursor = connection.cursor()
+    query = 'SELECT * FROM flight WHERE airline_name=%s and flight_number=%s and departure_date=%s and arrival_date=%s'
+    cursor.execute(query, (airline_name, flight_number, departure_date, arrival_date))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('public_check_status.html', data=data)
+
+# customer homepage route
+@app.route('/cust_home')
+def cust_home():
+    return render_template('cust_home.html')
 
 if __name__ == "__main__":
 	app.run('127.0.0.1', 5000, debug = True)

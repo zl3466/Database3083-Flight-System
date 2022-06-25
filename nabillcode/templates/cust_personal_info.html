@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal information</title>
+</head>
+<body>
+    
+<h3>Personal information</h3>
+<form action="/cust_personal_info" method="POST">
+        <label for="name"> Name  </label></br>
+        <input type="text" name = "name" placeholder="Name" required/></br>
+    <p>
+    <p>Address</p>
+        <label for="building_number"> Building Number </label></br>
+        <input type="text" name = "building_number" placeholder="Building Number" required/></br>
+        <label for="city"> City </label></br>
+        <input type="text" name = "city" placeholder="City" required/></br>
+        <label for="state"> State </label></br>
+        <input type="text" name = "state" placeholder="State" required/></br>
+    </p>
+
+        <label for="phone_number"> Phone Number </label></br>
+        <input type="int" name = "phone_number" placeholder="phone number" required/></br>
+
+    <p>
+    <p>Passport Information</p>
+        <label for="passport_number"> Passport Number </label></br>
+        <input type="text" name = "passport_number" placeholder="passport number" required/></br>
+        <label for="passport_country"> Country </label></br>
+        <input type="text" name = "passport_country" placeholder="country" required/></br>
+        <label for="passport_expiration"> Expiration Date </label></br>
+        <input type="date" name = "passport_expiration" required/></br>
+    </p>
+
+    <label for="date_of_birth"> Date of birth </label></br>
+    <input type="date" name = "date_of_birth" placeholder="Date of birth" required/></br>
+
+    <input type="submit" value = Register />
+</form>
+<a href = '/login'>Go back</a><br>
+<a href = '/'>Main menu</a>
+</body>
+</html>
