@@ -1,5 +1,5 @@
 from crypt import methods
-from pickle import FALSE, TRUE
+from os import times
 from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors, hashlib
 from datetime import timedelta
@@ -59,6 +59,7 @@ def cust_registerAuth():
     password = request.form['password']
     # hashing passwrod with md5
     password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
     cursor = connection.cursor()
     # query to get data on registering user
     query = 'SELECT * FROM customer WHERE email = %s'
@@ -85,6 +86,7 @@ def staff_registerAuth():
     username = request.form['username']
     password = request.form['password']
     password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
     cursor = connection.cursor()
     query = 'SELECT * FROM staff WHERE username = %s'
     cursor.execute(query, (username))
@@ -109,6 +111,7 @@ def cust_loginAuth():
     email = request.form['email']
     password = request.form['password']
     password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
     cursor = connection.cursor()
     # query to get password from login ingo
     query = 'SELECT password FROM customer where email = %s'
@@ -116,6 +119,7 @@ def cust_loginAuth():
     data = cursor.fetchone()
     cursor.close()
     error = None
+
     if(data):
         # checking password
         if data['password'] == password:
@@ -144,6 +148,7 @@ def staff_loginAuth():
     data = cursor.fetchone()
     cursor.close()
     error = None
+
     if(data):
         if data['password'] == password:
             session['username'] = username
@@ -182,12 +187,14 @@ def public_flightSearch():
     valid_timestamp = timestamp + timedelta(hours = 2)
     valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
+
     # dictionary for search parameters
     param_dict = {}
     date_input = {} 
     date_input['departure_date'] = request.form['departure_date']
     param_dict['src_name'] = request.form['src_name']
     param_dict['dst_name'] = request.form['dst_name']
+
     query = "SELECT * FROM flight "
     search_string = ""
     # list of search parameter keys
@@ -197,6 +204,7 @@ def public_flightSearch():
     predicate_start = ""
     predicate_end = ""
     dateinsearch = True
+
     if len(date_input['departure_date'])<1:
         predicate_start = "WHERE ((departure_date>%s) OR (departure_date=%s AND departure_time>%s))"
         param_values.extend([valid_date, valid_date, valid_time])
@@ -206,14 +214,18 @@ def public_flightSearch():
             predicate_start = "WHERE (departure_date = %s AND departure_time>%s)"
             param_values.extend([valid_date, valid_time])
             dateinsearch = False
+
     if dateinsearch:
         param_dict['departure_date'] = date_input['departure_date']
+
     for items in param_dict:
         if len(param_dict[items])>1:
             param_keys.append(items)
+
     if dateinsearch:
         predicate_start = " WHERE {} = %s".format(param_keys[0])
         param_values.append(param_dict[param_keys[0]])
+
     if len(param_keys)>0:
         for items in param_keys:
             predicate_end += " AND {} = %s".format(items)
@@ -226,58 +238,131 @@ def public_flightSearch():
     data = cursor.fetchall()
     cursor.close()
     available = True
+
     if len(data)<1:
         available = False
+
     return render_template('public_viewflights.html', data=data, today_date = valid_date, available = available)
 
 # round trip view flights route
 @app.route('/public_viewflightsRT', methods=["GET","POST"])
 def public_viewflightsRT():
-    return render_template('public_viewflights.html', roundtrip = TRUE)
+    return render_template('public_viewflights.html', roundtrip = True, available = True)
 
 # round trip search route
 @app.route('/public_flightsearchRT', methods = ['GET','POST'])
 def public_flightSearchRT():
+    # valid time/date
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    return_timestamp = timestamp + timedelta(days=1)
+    valid_return_date = return_timestamp.date()
     # dictionary for search parameters
     param_dict = {}
     param_dict['src_name'] = request.form['src_name']
     param_dict['dst_name'] = request.form['dst_name']
-    param_dict['departure_date'] = request.form['departure_date']
-    param_dict['departure_time'] = request.form['departure_time']
-    # dictionary for return search parameters
-    param_dictRT = {}
-    param_dictRT['dst_name'] = request.form['src_name']
-    param_dictRT['src_name'] = request.form['dst_name']
-    param_dictRT['departure_date'] = request.form['return_date']
-    param_dictRT['departure_time'] = request.form['return_time']
-    
-    query1 = "SELECT * FROM flight"
-    # query2 = "SELECT * FROM flight"
-    search_string = ""
+    date_input = {} 
+    date_input['departure_date'] = request.form['departure_date']
+    date_input['return_date'] = request.form['return_date']
+
+    # dictionary for return parameters
+    return_dict = {}
+    return_dict['src_name'] = param_dict['dst_name']
+    return_dict['dst_name'] = param_dict['src_name']
+
+    query_out = "SELECT * FROM flight "
+    query_re = "SELECT * FROM flight "
     # list of search parameter keys
     param_keys = []
     # list of search parameter values
     param_values = []
+    # list of return parameter keys
+    return_keys = []
+    # list of return parameter values
+    return_values = []
+    predicate_start = ""
+    predicate_end = ""
+    predicate_start_re = ""
+    predicate_end_re = ""
+    dateinsearch = True
+    returninsearch = True
+
+    if len(date_input['departure_date'])<1:
+        predicate_start = "WHERE ((departure_date>%s) OR (departure_date=%s AND departure_time>%s))"
+        param_values.extend([valid_date, valid_date, valid_time])
+        dateinsearch  = False
+    else:
+        if date_input['departure_date'] == valid_date:
+            predicate_start = "WHERE (departure_date = %s AND departure_time>%s)"
+            param_values.extend([valid_date, valid_time])
+            dateinsearch = False
+
+    if dateinsearch:
+        param_dict['departure_date'] = date_input['departure_date']
+
     for items in param_dict:
         if len(param_dict[items])>1:
             param_keys.append(items)
-    if len(param_keys)>0:
-        search_string = " WHERE {} = %s".format(param_keys[0])
+
+    if dateinsearch:
+        predicate_start = " WHERE {} = %s".format(param_keys[0])
         param_values.append(param_dict[param_keys[0]])
-    if len(param_keys)>1:
-        for items in param_keys[1:]:
-            search_string += " and {} = %s".format(items)
+
+    if len(param_keys)>0:
+        for items in param_keys:
+            predicate_end += " AND {} = %s".format(items)
             param_values.append(param_dict[items])
+
+    for items in return_dict:
+        if len(return_dict[items])>1:
+            return_keys.append(items)
+
+    if len(date_input['return_date'])<1:
+        returninsearch  = False
+    else:
+        if date_input['return_date'] == valid_return_date:
+            returninsearch = False
+
+    if returninsearch:
+        predicate_start_re = "WHERE departure_date = %s"
+        return_values.append(date_input['return_date'])
+        return
+    else:
+        if dateinsearch:
+            valid_return_date = date_input['departure_date'] + timedelta(days=1)
+        else:
+            pass
+        return_values.append(valid_return_date)
+        predicate_start_re = "WHERE departure_date >= %s"
+    
+    if len(return_keys)>0:
+        for items in return_keys:
+            predicate_end_re += " AND {} = %s".format(items)
+            return_values.append(return_dict[items])
+            
+    search_out = query_out + predicate_start + predicate_end
+    search_re = query_re + predicate_start_re + predicate_end_re
+
     param_tuple = tuple(param_values)
-    search = query + search_string
+    return_tuple = tuple(return_values)
     cursor = connection.cursor()
-    cursor.execute(search, param_tuple)
-    data = cursor.fetchall()
+    cursor.execute(search_out, param_tuple)
+    outgoing = cursor.fetchall()
     cursor.close()
+    cursor = connection.cursor()
+    cursor.execute(search_re, return_tuple)
+    returning = cursor.fetchall()
+    cursor.close()
+
     available = True
-    if len(data)<1:
+    if len(outgoing)<1 or len(returning)<1:
         available = False
-    return render_template('public_viewflights.html', data=data, roundtrip=TRUE, available = available)
+
+    return render_template('public_viewflights.html', data = outgoing, returning = returning, 
+        today_date = valid_date, roundtrip = True, valid_return_date = valid_return_date,
+        available = available)
 
 if __name__ == "__main__":
 	app.run('127.0.0.1', 5000, debug = True)
