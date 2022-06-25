@@ -14,23 +14,20 @@
 <table>
     <th>Airline Name</th>
     <th>Flight Number</th>
-	<th>From</th>
-    <th>To</th>
     <th>Departure Date</th>
     <th>Departure Time</th>
 
 {% for line in data %}
-    <form action="/cancel_flight" method="get">
+    <form action="/cancel_flight" method="post">
 	<tr>
         <td>{{line['airline_name']}}</td>
         <td>{{line['flight_number']}}</td>
-		<td>{{line['source_airport_name']}}</td>
-        <td>{{line['destination_airport_name']}}</td>
         <td>{{line['departure_date']}}</td>
         <td>{{line['departure_time']}}</td>
-        <input type="text" name="airline_name" value="{{line['ticket_id']}}" hidden>
+        <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden>
         <td><input type="submit" value = Cancel /></td>
 	</tr>
+    </form>
 {% endfor %}
 </table>
 </form>>

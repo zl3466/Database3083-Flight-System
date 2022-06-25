@@ -380,11 +380,13 @@ def my_flight():
 @app.route('/cancel_flight', methods=['GET', 'POST'])
 def cancel_flight():
     ticket_id = request.form['ticket_id']
+    print(ticket_id + ", yesyes")
+    # print('yes')
     cursor = conn.cursor()
     query = 'delete * from ticket where ticket_id=%s'
     cursor.execute(query, ticket_id)
     cursor.close()
-    return render_template('customer_my_flights.html')
+    return render_template('customer_home.html')
 
 
 @app.route('/customer_track_spending', methods=['GET', 'POST'])
@@ -452,13 +454,6 @@ def make_purchase():
     conn.commit()
     cursor.close()
     return render_template('customer_search_flight.html')
-
-
-
-# unfinished cancel_flight()
-@app.route('/cancel_flight', methods=['GET', 'POST'])
-def cancel_flight():
-    return
 
 
 # ---------------------------------STAFF-------------------------------------------
