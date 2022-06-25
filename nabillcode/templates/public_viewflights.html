@@ -25,9 +25,11 @@
         <label for="return_date" name="return_date">Departure date (return)</label><br>
         <input type="date" name="return_date" ><br>
         {% endif %}
-        <input type="submit" value = Search><br>
+        <br><input type="submit" value = Search><br>
     </form>
-    {{data}}
+    {%if not available%}
+    <h3>No upcoming flights matching search</h3>
+    {%endif%}
     {% if data %}
     <h3>Upcoming Flights</h3>
     <table>
@@ -62,6 +64,6 @@
         {% endfor %}
     </table>
     {% endif %}
-    <a href="/publicinfo">Go back</a>
+    <br><a href="/publicinfo">Go back</a>
 </body>
 </html>

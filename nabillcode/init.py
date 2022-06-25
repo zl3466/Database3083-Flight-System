@@ -1,5 +1,5 @@
 from crypt import methods
-from pickle import TRUE
+from pickle import FALSE, TRUE
 from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors, hashlib
 from datetime import timedelta
@@ -171,19 +171,8 @@ def public_viewFlights():
     # declaring timestamp for now
     timestamp = datetime.now()
     valid_timestamp = timestamp + timedelta(hours = 2)
-    valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
-    cursor = connection.cursor()
-    # query to get all upcoming flight data
-    query = 'SELECT * FROM flight WHERE (departure_date>%s) OR (departure_date=%s and departure_time>%s)'
-    cursor.execute(query, (valid_date, valid_date, valid_time))
-    data = cursor.fetchall()
-    cursor.close()
-    # parsing through each flight to get search parameters \
-    # and storing 
-    for each in data:
-        src_port = each['src_name']
-    return render_template('public_viewflights.html', today_date = valid_date)
+    return render_template('public_viewflights.html', today_date = valid_date, available = True)
 
 # route for searching for flights (public)
 @app.route('/public_flightsearch', methods = ['GET','POST'])
@@ -195,32 +184,51 @@ def public_flightSearch():
     valid_date = valid_timestamp.date()
     # dictionary for search parameters
     param_dict = {}
+    date_input = {} 
+    date_input['departure_date'] = request.form['departure_date']
     param_dict['src_name'] = request.form['src_name']
     param_dict['dst_name'] = request.form['dst_name']
-    param_dict['departure_date'] = request.form['departure_date']
-    query = "SELECT * FROM flight"
+    query = "SELECT * FROM flight "
     search_string = ""
     # list of search parameter keys
     param_keys = []
     # list of search parameter values
     param_values = []
+    predicate_start = ""
+    predicate_end = ""
+    dateinsearch = True
+    if len(date_input['departure_date'])<1:
+        predicate_start = "WHERE ((departure_date>%s) OR (departure_date=%s AND departure_time>%s))"
+        param_values.extend([valid_date, valid_date, valid_time])
+        dateinsearch  = False
+    else:
+        if date_input['departure_date'] == valid_date:
+            predicate_start = "WHERE (departure_date = %s AND departure_time>%s)"
+            param_values.extend([valid_date, valid_time])
+            dateinsearch = False
+    if dateinsearch:
+        param_dict['departure_date'] = date_input['departure_date']
     for items in param_dict:
         if len(param_dict[items])>1:
             param_keys.append(items)
-    if len(param_keys)>0:
-        search_string = " WHERE {} = %s".format(param_keys[0])
+    if dateinsearch:
+        predicate_start = " WHERE {} = %s".format(param_keys[0])
         param_values.append(param_dict[param_keys[0]])
-    if len(param_keys)>1:
-        for items in param_keys[1:]:
-            search_string += " and {} = %s".format(items)
+    if len(param_keys)>0:
+        for items in param_keys:
+            predicate_end += " AND {} = %s".format(items)
             param_values.append(param_dict[items])
+        
     param_tuple = tuple(param_values)
-    search = query + search_string
+    search = query + predicate_start + predicate_end
     cursor = connection.cursor()
     cursor.execute(search, param_tuple)
     data = cursor.fetchall()
     cursor.close()
-    return render_template('public_viewflights.html', data=data, today_date = valid_date)
+    available = True
+    if len(data)<1:
+        available = False
+    return render_template('public_viewflights.html', data=data, today_date = valid_date, available = available)
 
 # round trip view flights route
 @app.route('/public_viewflightsRT', methods=["GET","POST"])
@@ -266,7 +274,10 @@ def public_flightSearchRT():
     cursor.execute(search, param_tuple)
     data = cursor.fetchall()
     cursor.close()
-    return render_template('public_viewflights.html', data=data, roundtrip=TRUE)
+    available = True
+    if len(data)<1:
+        available = False
+    return render_template('public_viewflights.html', data=data, roundtrip=TRUE, available = available)
 
 if __name__ == "__main__":
 	app.run('127.0.0.1', 5000, debug = True)
