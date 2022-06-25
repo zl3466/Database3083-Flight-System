@@ -5,7 +5,6 @@
     <title>Title</title>
 </head>
 <body>
-<form>
 <style type="text/css">
 	table, th, td{
 		border: 1px solid black;
@@ -18,19 +17,18 @@
     <th>Departure Time</th>
 
 {% for line in data %}
-    <form action="/cancel_flight" method="post">
+    <form action="/cancel_flight" method="POST">
 	<tr>
         <td>{{line['airline_name']}}</td>
         <td>{{line['flight_number']}}</td>
         <td>{{line['departure_date']}}</td>
         <td>{{line['departure_time']}}</td>
-        <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden>
+        <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
         <td><input type="submit" value = Cancel /></td>
 	</tr>
     </form>
 {% endfor %}
 </table>
-</form>>
 
 <a href="/customer_home">Go back</a>
 </body>

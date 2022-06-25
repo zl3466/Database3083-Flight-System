@@ -56,7 +56,7 @@
             <th>Base Price</th>
 
         {% for line in data %}
-            <form action="/purchase" method="post">
+            <form action="/purchase" method="POST">
             <tr>
                 <td>{{line['airline_name']}}</td>
                 <td>{{line['flight_number']}}</td>
@@ -67,11 +67,11 @@
                 <td>{{line['arrival_date']}}</td>
                 <td>{{line['arrival_time']}}</td>
                 <td>{{line['base_price']}}</td>
-                <input type="text" name="airline_name" value="{{line['airline_name']}}" hidden>
-                <input type="text" name="flight_number" value="{{line['flight_number']}}" hidden>
-                <input type="text" name="departure_date" value="{{line['departure_date']}}" hidden>
-                <input type="text" name="departure_time" value="{{line['departure_time']}}" hidden>
-                <input type="text" name="base_price" value="{{line['base_price']}}" hidden>
+                <input type="text" name="airline_name" value="{{line['airline_name']}}" hidden/>
+                <input type="text" name="flight_number" value="{{line['flight_number']}}" hidden/>
+                <input type="text" name="departure_date" value="{{line['departure_date']}}" hidden/>
+                <input type="text" name="departure_time" value="{{line['departure_time']}}" hidden/>
+                <input type="text" name="base_price" value="{{line['base_price']}}" hidden/>
                 <td><input type="submit" value = Purchase /></td>
             </tr>
             </form>

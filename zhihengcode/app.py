@@ -380,13 +380,14 @@ def my_flight():
 @app.route('/cancel_flight', methods=['GET', 'POST'])
 def cancel_flight():
     ticket_id = request.form['ticket_id']
-    print(ticket_id + ", yesyes")
-    # print('yes')
     cursor = conn.cursor()
-    query = 'delete * from ticket where ticket_id=%s'
-    cursor.execute(query, ticket_id)
+    # query = 'delete from ticket where ticket_id=%s'
+    query = 'update ticket set card_type=%s, card_number=%s, exp_date=%s, purchase_date=%s, purchase_time=%s, email=%s ' \
+            'where ticket_id=%s'
+    cursor.execute(query, (None, None, None, None, None, None, ticket_id))
+    conn.commit()
     cursor.close()
-    return render_template('customer_home.html')
+    return render_template('customer_my_flights.html')
 
 
 @app.route('/customer_track_spending', methods=['GET', 'POST'])
