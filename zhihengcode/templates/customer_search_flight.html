@@ -56,7 +56,7 @@
             <th>Base Price</th>
 
         {% for line in data %}
-            <form action="/purchase" method="POST">
+            <form action="/purchase" method="get">
             <tr>
                 <td>{{line['airline_name']}}</td>
                 <td>{{line['flight_number']}}</td>

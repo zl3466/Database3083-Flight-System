@@ -373,10 +373,18 @@ def my_flight():
     query = 'select * from ticket where email=%s'
     cursor.execute(query, email)
     data = cursor.fetchall()
-    for line in data:
-        session[line['ticket_id']] = line['ticket_id']
     cursor.close()
-    return render_template('my_flights.html', data=data)
+    return render_template('customer_my_flights.html', data=data)
+
+
+@app.route('/cancel_flight', methods=['GET', 'POST'])
+def cancel_flight():
+    ticket_id = request.form['ticket_id']
+    cursor = conn.cursor()
+    query = 'delete * from ticket where ticket_id=%s'
+    cursor.execute(query, ticket_id)
+    cursor.close()
+    return render_template('customer_my_flights.html')
 
 
 @app.route('/customer_track_spending', methods=['GET', 'POST'])

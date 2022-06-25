@@ -20,6 +20,7 @@
     <th>Departure Time</th>
 
 {% for line in data %}
+    <form action="/cancel_flight" method="get">
 	<tr>
         <td>{{line['airline_name']}}</td>
         <td>{{line['flight_number']}}</td>
@@ -27,7 +28,8 @@
         <td>{{line['destination_airport_name']}}</td>
         <td>{{line['departure_date']}}</td>
         <td>{{line['departure_time']}}</td>
-        <td><a href="/create_ticket_session"><button>Cancel</button></a></td>
+        <input type="text" name="airline_name" value="{{line['ticket_id']}}" hidden>
+        <td><input type="submit" value = Cancel /></td>
 	</tr>
 {% endfor %}
 </table>
