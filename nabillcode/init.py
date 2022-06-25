@@ -78,6 +78,7 @@ def cust_registerAuth():
         cursor.close()
         return render_template('cust_personal_info.html')
 
+# route for customer personal info
 @app.route('/cust_personal_info', methods=['GET','POST'])
 def cust_personal_info():
     email = session['email']
@@ -119,10 +120,16 @@ def staff_registerAuth():
         return render_template('staff_register.html', error = error)
     else:
         ins = 'INSERT INTO staff(username, password) VALUES(%s, %s)'
+        session['username'] = username
         cursor.execute(ins, (username, password))
         connection.commit()
         cursor.close()
-        return render_template('index.html')
+        return render_template('staff_personal_info.html')
+
+# route for staff personal info
+@app.route('/staff_personal_info', methods = ['POST'])
+def staff_personal_info():
+    return
 
 # ---------------------------------LOGIN-------------------------------------------
 

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal info</title>
+</head>
+<body>
+    <h3>Personal information</h3>
+    <form action="/staff_personal_info" method = "POST">
+        <label for="first_name"> First name  </label></br>
+        <input type="text" name = "first_name" placeholder="First name" required/></br>
+        <label for="last_name"> Last name  </label></br>
+        <input type="text" name = "last_name" placeholder="Last name" required/></br>
+        <label for="date_of_birth"> Last name  </label></br>
+        <input type="date" name = "date_of_birth" required/></br>
+        <label for="airline_name"> Employer  </label></br>
+        <input type="text" name = "airline_name" placeholder="Employer" required/></br>
+        <label for="phones"> How many phone numbers will you input?  </label></br>
+        <input type="number" name = "phones" required/></br>
+        <label for="email"> How many emails will you input?  </label></br>
+        <input type="number" name = "email" required min=1/></br>
+        <input type="submit" value = Register><br>
+    </form>
+    <a href = '/register'>Go back</a><br>
+    <a href = '/'>Main menu</a>
+</body>
+</html>
