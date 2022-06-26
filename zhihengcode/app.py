@@ -417,7 +417,11 @@ def check_spending_month():
     cursor.execute(query, (email, start_date, start_date, valid_time))
     data = cursor.fetchone()
     cursor.close()
-    return render_template('customer_track_spending.html', data=data)
+    if data['SUM(sold_price)']:
+        return render_template('customer_track_spending.html', data=data['SUM(sold_price)'])
+    else:
+        return render_template('customer_track_spending.html', error='No Purchase Record')
+
 
 @app.route('/check_spending_year', methods=['GET', 'POST'])
 def check_spending_year():
@@ -434,7 +438,11 @@ def check_spending_year():
     cursor.execute(query, (email, start_date, start_date, valid_time))
     data = cursor.fetchone()
     cursor.close()
-    return render_template('customer_track_spending.html', data=data)
+
+    if data['SUM(sold_price)']:
+        return render_template('customer_track_spending.html', data=data['SUM(sold_price)'])
+    else:
+        return render_template('customer_track_spending.html', error='No Purchase Record')
 
 
 @app.route('/check_spending_specific', methods=['GET', 'POST'])
@@ -449,7 +457,11 @@ def check_spending_specific():
     cursor.execute(query, (email, end_date, start_date, start_date))
     data = cursor.fetchone()
     cursor.close()
-    return render_template('customer_track_spending.html', data=data)
+
+    if data['SUM(sold_price)']:
+        return render_template('customer_track_spending.html', data=data['SUM(sold_price)'])
+    else:
+        return render_template('customer_track_spending.html', error='No Purchase Record')
 
 
 
