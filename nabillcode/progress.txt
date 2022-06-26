@@ -1,3 +1,4 @@
+        phone_inserts.append(insert)
 notes:
 use "root" for pymysql connection password
 
