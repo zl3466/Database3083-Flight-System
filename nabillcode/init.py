@@ -1,5 +1,6 @@
 from crypt import methods
 from os import times
+from sqlite3 import connect
 from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors, hashlib
 from datetime import timedelta
@@ -36,20 +37,20 @@ def register():
 # ---------------------------------REGISTER-------------------------------------------
 
 # customer register route
-@app.route('/cust_register')
-def custRegister():
-    return render_template('cust_register.html')
+@app.route('/customer_register')
+def customer_register():
+    return render_template('customer_register.html')
 
 # staff register route
 @app.route('/staff_register')
-def staffRegister():
+def staff_register():
     return render_template('staff_register.html')
 
 
 # customer registration authentication route
 # note: pattern similar to staff_registerAuth
-@app.route('/cust_registerAuth', methods=['POST'])
-def cust_registerAuth():
+@app.route('/customer_registerAuth', methods=['POST'])
+def customer_registerAuth():
     # requesting registration info from forms using POST
     email = request.form['email']
     password = request.form['password']
@@ -67,7 +68,7 @@ def cust_registerAuth():
     if(data):
         error = "This user already exists"
         cursor.close()
-        return render_template('cust_register.html', error = error)
+        return render_template('customer_register.html', error = error)
     
     # case: user data not in database --> insert new user data
     else:
@@ -76,10 +77,10 @@ def cust_registerAuth():
         cursor.execute(ins, (email, password))
         connection.commit()
         cursor.close()
-        return render_template('cust_personal_info.html')
+        return render_template('customer_personal_info.html')
 
 # staff registration authentication route 
-# note: pattern similar to cust_registerAuth
+# note: pattern similar to customer_registerAuth
 @app.route('/staff_registerAuth', methods = ['POST'])
 def staff_registerAuth():
     username = request.form['username']
@@ -104,8 +105,8 @@ def staff_registerAuth():
         return render_template('staff_personal_info.html')
 
 # route for customer personal info
-@app.route('/cust_personal_info', methods=['GET','POST'])
-def cust_personal_info():
+@app.route('/customer_personal_info', methods=['GET','POST'])
+def customer_personal_info():
     email = session['email']
     info_dict = {}
     info_dict['name'] = request.form['name']
@@ -124,7 +125,7 @@ def cust_personal_info():
         connection.commit()
     cursor.close()
 
-    return redirect(url_for9('cust_home.html'))
+    return redirect(url_for('customer_home'))
 
 # global variables for number of phone numbers/emails to be input staff
 # route for staff personal info
@@ -186,14 +187,14 @@ def staff_phones_emails():
 
     cursor.close()
     
-    return redirect(url_for('staff_home.html'))
+    return redirect(url_for('staff_home'))
 
 # ---------------------------------LOGIN-------------------------------------------
 
 # customer login route
-@app.route('/cust_login')
+@app.route('/customer_login')
 def custLogin():
-    return render_template('cust_login.html')
+    return render_template('customer_login.html')
 
 # staff login route
 @app.route('/staff_login')
@@ -202,8 +203,8 @@ def staffLogin():
 
 # customer login authentication route
 # note: similar to staff_loginAuth
-@app.route('/cust_loginAuth', methods=['POST'])
-def cust_loginAuth():
+@app.route('/customer_loginAuth', methods=['POST'])
+def customer_loginAuth():
     #
     email = request.form['email']
     password = request.form['password']
@@ -222,18 +223,18 @@ def cust_loginAuth():
         if data['password'] == password:
             # setting session to current user
             session['email'] = email
-            return redirect(url_for('cust_home'))
+            return redirect(url_for('customer_home'))
         # case: password does not match --> throw error
         else:
             error = "Incorrect password"
-            return render_template('cust_login.html', error = error)
+            return render_template('customer_login.html', error = error)
     # case: email does not exist --> throw error
     else:
         error = "Invalid email"
-        return render_template('cust_login.html', error = error)
+        return render_template('customer_login.html', error = error)
 
 # staff login authentication route
-# note: similar to cust_loginAuth
+# note: similar to customer_loginAuth
 @app.route('/staff_loginAuth', methods=['POST'])
 def staff_loginAuth():
     username = request.form['username']
@@ -249,7 +250,7 @@ def staff_loginAuth():
     if(data):
         if data['password'] == password:
             session['username'] = username
-            return redirect(url_for('home'))
+            return redirect(url_for('staff_home'))
         else:
             error = "Incorrect password"
             return render_template('staff_login.html', error = error)
@@ -260,18 +261,18 @@ def staff_loginAuth():
 # ---------------------------------PUBLIC-------------------------------------------
 
 # public information route
-@app.route('/publicinfo')
-def publicinfo():
-    return render_template('publicinfo.html')
+@app.route('/public_info')
+def public_info():
+    return render_template('public_info.html')
 
 # view flights(public) route
-@app.route('/public_viewflights')
-def public_viewFlights():
+@app.route('/public_view_flights')
+def public_view_flights():
     # declaring timestamp for now
     timestamp = datetime.now()
     valid_timestamp = timestamp + timedelta(hours = 2)
     valid_date = valid_timestamp.date()
-    return render_template('public_viewflights.html', today_date = valid_date, available = True)
+    return render_template('public_view_flights.html', today_date = valid_date, available = True)
 
 # route for searching for flights (public)
 @app.route('/public_flightsearch', methods = ['GET','POST'])
@@ -336,12 +337,12 @@ def public_flightSearch():
     if len(data)<1:
         available = False
 
-    return render_template('public_viewflights.html', data=data, today_date = valid_date, available = available)
+    return render_template('public_view_flights.html', data=data, today_date = valid_date, available = available)
 
 # round trip view flights route
-@app.route('/public_viewflightsRT', methods=["GET","POST"])
-def public_viewflightsRT():
-    return render_template('public_viewflights.html', roundtrip = True, available = True)
+@app.route('/public_view_flightsRT', methods=["GET","POST"])
+def public_view_flightsRT():
+    return render_template('public_view_flights.html', roundtrip = True, available = True)
 
 # round trip search route
 @app.route('/public_flightsearchRT', methods = ['GET','POST'])
@@ -454,7 +455,7 @@ def public_flightSearchRT():
     if len(outgoing)<1 or len(returning)<1:
         available = False
 
-    return render_template('public_viewflights.html', data = outgoing, returning = returning, 
+    return render_template('public_view_flights.html', data = outgoing, returning = returning, 
         today_date = valid_date, roundtrip = True, valid_return_date = valid_return_date,
         available = available)
 
@@ -483,14 +484,40 @@ def public_check_status():
 # ---------------------------------CUSTOMER-------------------------------------------
 
 # customer homepage route
-@app.route('/cust_home')
-def cust_home():
-    return render_template('cust_home.html')
+@app.route('/customer_home')
+def customer_home():
+    email = session['email']
+    cursor = connection.cursor()
+    query = 'SELECT name FROM customer WHERE email=%s'
+    cursor.execute(query, email)
+    name = cursor.fetchone()['name']
+    return render_template('customer_home.html', name=name)
 
 # ---------------------------------STAFF-------------------------------------------
-@app.route('/staff_home')
+@app.route('/staff_home', methods=['GET', 'POST'])
 def staff_home():
-    return render_template('staff_home.html')
+    username = session['username']
+    cursor = connection.cursor()
+    query1 = 'SELECT first_name, airline_name FROM staff WHERE username=%s'
+    cursor.execute(query1, username)
+    data = cursor.fetchone()
+    first_name = data['first_name']
+    airline_name = data['airline_name'] 
+    return render_template('staff_home.html', first_name=first_name, airline_name=airline_name)
+
+
+ # ---------------------------------LOGOUT-------------------------------------------
+@app.route('/customer_logout')
+def customer_logout():
+    session.pop('email')
+    return redirect(url_for('index'))
+
+@app.route('/staff_logout')
+def staff_logout():
+    session.pop('username')
+    return redirect(url_for('index'))
+
+ # ----------------------------------------------------------------------------------
 
 if __name__ == "__main__":
 	app.run('127.0.0.1', 5000, debug = True)
