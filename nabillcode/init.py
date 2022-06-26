@@ -78,29 +78,6 @@ def cust_registerAuth():
         cursor.close()
         return render_template('cust_personal_info.html')
 
-# route for customer personal info
-@app.route('/cust_personal_info', methods=['GET','POST'])
-def cust_personal_info():
-    email = session['email']
-    info_dict = {}
-    info_dict['name'] = request.form['name']
-    info_dict['building_number'] = request.form['building_number']
-    info_dict['city'] = request.form['city']
-    info_dict['state'] = request.form['state']
-    info_dict['phone_number'] = request.form['phone_number']
-    info_dict['passport_number'] = request.form['passport_number']
-    info_dict['passport_country'] = request.form['passport_country']
-    info_dict['passport_expiration'] = request.form['passport_expiration']
-
-    cursor = connection.cursor()
-    for key in info_dict:
-        update = "UPDATE CUSTOMER SET {} = %s WHERE email = %s".format(key)
-        cursor.execute(update, (info_dict[key], email))
-        connection.commit()
-    cursor.close()
-
-    return render_template('cust_home.html')
-
 # staff registration authentication route 
 # note: pattern similar to cust_registerAuth
 @app.route('/staff_registerAuth', methods = ['POST'])
@@ -126,10 +103,90 @@ def staff_registerAuth():
         cursor.close()
         return render_template('staff_personal_info.html')
 
+# route for customer personal info
+@app.route('/cust_personal_info', methods=['GET','POST'])
+def cust_personal_info():
+    email = session['email']
+    info_dict = {}
+    info_dict['name'] = request.form['name']
+    info_dict['building_number'] = request.form['building_number']
+    info_dict['city'] = request.form['city']
+    info_dict['state'] = request.form['state']
+    info_dict['phone_number'] = request.form['phone_number']
+    info_dict['passport_number'] = request.form['passport_number']
+    info_dict['passport_country'] = request.form['passport_country']
+    info_dict['passport_expiration'] = request.form['passport_expiration']
+
+    cursor = connection.cursor()
+    for key in info_dict:
+        update = "UPDATE CUSTOMER SET {} = %s WHERE email = %s".format(key)
+        cursor.execute(update, (info_dict[key], email))
+        connection.commit()
+    cursor.close()
+
+    return redirect(url_for9('cust_home.html'))
+
+# global variables for number of phone numbers/emails to be input staff
 # route for staff personal info
+
 @app.route('/staff_personal_info', methods = ['POST'])
 def staff_personal_info():
-    return
+    username = session['username']
+    info_dict = {}
+    info_dict['first_name'] = request.form['first_name']
+    info_dict['last_name'] = request.form['last_name']
+    info_dict['date_of_birth'] = request.form['date_of_birth']
+    info_dict['airline_name'] = request.form['airline_name']
+    
+    phones = request.form['phones']
+    emails = request.form['emails']
+    phone_ids=[]
+    email_ids=[]
+
+    cursor = connection.cursor()
+    for key in info_dict:
+        update = "UPDATE staff SET {} = %s WHERE username = %s".format(key)
+        cursor.execute(update, (info_dict[key], username))
+        connection.commit()
+    cursor.close()
+
+    for number in range(int(phones)):
+        phone_ids.append(str(number+1))
+    
+    for number in range(int(emails)):
+        email_ids.append('Email '+str(number+1))
+
+    global staff_phones
+    global staff_emails
+
+    staff_phones = phone_ids
+    staff_emails = email_ids
+
+    return render_template('staff_phones_emails.html', phones=phone_ids, emails=email_ids)
+
+@app.route('/staff_phones_emails', methods = ['POST'])
+def staff_phones_emails():
+    username = session['username']
+    cursor = connection.cursor()
+
+    global staff_phones
+    global staff_emails
+  
+    for id in staff_phones:
+        phone_number = request.form[id]
+        insert = "INSERT INTO staff_phone_number(username, phone_number) values(%s, %s)"
+        cursor.execute(insert, (username, phone_number))
+        connection.commit()
+
+    for id in staff_emails:
+        email = request.form[id]
+        insert = "INSERT INTO staff_email(username, email) values(%s, %s)"
+        cursor.execute(insert, (username, email))
+        connection.commit()
+
+    cursor.close()
+    
+    return redirect(url_for('staff_home.html'))
 
 # ---------------------------------LOGIN-------------------------------------------
 
@@ -423,10 +480,17 @@ def public_check_status():
     cursor.close()
     return render_template('public_check_status.html', data=data)
 
+# ---------------------------------CUSTOMER-------------------------------------------
+
 # customer homepage route
 @app.route('/cust_home')
 def cust_home():
     return render_template('cust_home.html')
+
+# ---------------------------------STAFF-------------------------------------------
+@app.route('/staff_home')
+def staff_home():
+    return render_template('staff_home.html')
 
 if __name__ == "__main__":
 	app.run('127.0.0.1', 5000, debug = True)
