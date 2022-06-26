@@ -7,12 +7,13 @@
     <title>Staff register</title>
 </head>
 <body>
+    <h3>Staff registration</h3>
     <form action="/staff_registerAuth" method="POST">
         <label for="username">Username:</label><br> 
         <input type="text" name="username"required><br>
         <label for="password">Password:</label><br> 
         <input type="password" name="password" required><br>
-        <input type="submit" value = Submit><br>
+        <input type="submit" value = Register><br>
         {% if error %}
         <p class="error"><strong>Error:</strong>{{error}}</p>
     {% endif %}
