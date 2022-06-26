@@ -5,20 +5,36 @@
     <title>Title</title>
 </head>
 <body>
-<form action="/view_flight_date_range" method="POST">
+<form action="/view_spending" method="POST">
 <h2>Ticket Sales Record</h2>
-    <p>
-        <select name="display_period">
-            <option value="specific_period">Specific Period</option>
-            <option value="monthly">Past Month</option>
-            <option value="annual">Past Year</option>
-        </select>
-    </p>
-    {% if display_period=="specific_period" %}
-        <label for="start_date"> Start Date </label> </br>
-        <input type="date" name = "start_date" /> </br>
-        <label for="end_date"> End Date </label> </br>
-        <input type="date" name = "end_date" /> </br>
+    <form action="/define_period" method="POST">
+        <input type="text" name="period" list="period_choice">
+        <datalist id="period_choice">
+            <option value="specific period"></option>
+            <option value="past month"></option>
+            <option value="past year"></option>
+        </datalist>
+        <input type="submit" value = "Confirm Range" /> </br>
+    </form>
+    {% if period %}
+        {% if period=="specific_period" %}
+            <form action="/check_spending_specific" method="POST">
+            <label for="start_date"> Start Date </label> </br>
+            <input type="date" name = "start_date" /> </br>
+            <label for="end_date"> End Date </label> </br>
+            <input type="date" name = "end_date" /> </br>
+            <input type="submit" value = "Check Spending" /> </br>
+            </form>
+        {% elseif period=='past month' %}
+            <form action="/check_spending_month" method="POST">
+            <input type="submit" value = "Check Spending" /> </br>
+            </form>
+        {% else %}
+            <form action="/check_spending_year">
+            <input type="submit" value = "Check Spending" /> </br>
+            </form>
+        {% endif %}
+
     {% endif %}
 </form>
 
@@ -28,16 +44,16 @@
 	}
 </style>
 
+
+{% if data %}
 <table>
     <th>Total Spent</th>
-
-{% for line in tickets %}
 	<tr>
-        <td>{{line['total_spent']}}</td>
+        <td>{{data}}</td>
 	</tr>
-{% endfor %}
 </table>
+{% endif %}
 
-<a href="/staff_home">Go back</a>
+<a href="/customer_home">Go back</a>
 </body>
 </html>

@@ -1,6 +1,7 @@
 import pymysql.cursors, hashlib
 from flask import Flask, render_template, request, session, url_for, redirect
 from datetime import timedelta, datetime
+from dateutil.relativedelta import relativedelta
 
 app = Flask(__name__)
 
@@ -392,7 +393,64 @@ def cancel_flight():
 
 @app.route('/customer_track_spending', methods=['GET', 'POST'])
 def customer_track_spending():
-    return
+    return render_template('customer_track_spending.html')
+
+
+@app.route('/define_period', methods=['GET', 'POST'])
+def define_period():
+    period = request.form['period']
+    return render_template('customer_track_spending.html', period=period)
+
+
+@app.route('/check_spending_month', methods=['GET', 'POST'])
+def check_spending_month():
+    email = session['email']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    start_date = valid_date - relativedelta(months=1)
+    cursor = conn.cursor()
+
+    query = 'SELECT SUM(sold_price) FROM ticket WHERE email=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+    cursor.execute(query, (email, start_date, start_date, valid_time))
+    data = cursor.fetchone()
+    cursor.close()
+    return render_template('customer_track_spending.html', data=data)
+
+@app.route('/check_spending_year', methods=['GET', 'POST'])
+def check_spending_year():
+    email = session['email']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    start_date = valid_date - relativedelta(years=1)
+    cursor = conn.cursor()
+
+    query = 'SELECT SUM(sold_price) FROM ticket WHERE email=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+    cursor.execute(query, (email, start_date, start_date, valid_time))
+    data = cursor.fetchone()
+    cursor.close()
+    return render_template('customer_track_spending.html', data=data)
+
+
+@app.route('/check_spending_specific', methods=['GET', 'POST'])
+def check_spending_specific():
+    email = session['email']
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+    cursor = conn.cursor()
+
+    query = 'SELECT SUM(sold_price) FROM ticket WHERE email=%s and purchase_date<%s and' \
+            '(purchase_date>%s OR purchase_date=%s)'
+    cursor.execute(query, (email, end_date, start_date, start_date))
+    data = cursor.fetchone()
+    cursor.close()
+    return render_template('customer_track_spending.html', data=data)
+
 
 
 # unfinished purchase()
