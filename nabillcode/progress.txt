@@ -1,0 +1,95 @@
+notes:
+use "root" for pymysql connection password
+
+finished: 
+setting up index.html, login.html, register.html
+
+
+next: 
+1) finish cust_registerAuth
+2) setup staff_registerAuth
+3) setup cust_loginAuth
+4) setup staff_loginAuth
+5) change links in html files to navbar
+
+finished:
+setting up routes for 1,2,3,4
+
+next:
+6) setup view public info
+7) setup cust_viewwflights --> contains (cancel_trip,
+    past_flights --> contains(rate, comment))
+8) setup cust_searchflights
+9) setup trackmyspending
+10) setup logout
+
+ideas:
+put everything on one page for views
+form types (select for dropdown scroll options):
+https://www.w3schools.com/html/html_form_elements.asp
+
+6 --
+1) get data from db for selections
+2) get data from selections
+3) make cases for selections
+
+concatenate date and time to compare with current_timestamp+2
+
+next:
+6.1 setup buttons for one way and round trip using past_flights (done)
+6.2 implement calculations for departure dates
+6.3 implement queries for round trip 
+
+Round trip flights
+note from self: 
+cannot match a going flight directly to any flight for return / 
+this is because customers should be able to choose their own return flight
+so, soln: prepare a list of possible return flights
+condition for a possible return flight:
+(departure_date(RT) > departure_date) or 
+
+make round trip page deal with its own query exclusively
+change normal search (public view flights) query to 
+timestamp = datetime.now()
+valid_timestamp = timestamp + timedelta(hours = 2)
+valid_time = valid_timestamp.time()
+valid_date = valid_timestamp.date()
+cursor = connection.cursor()
+query = "SELECT * FROM flight"
+search_string = "WHERE (departure_date>%s) OR (departure_date=%s and departure_time>%s)'"
+in other words,
+default without choosing departure dates and times will show future flights,
+make cases for when chosen
+
+if 'departure_date' not in param_keys:
+        search_string += " AND (departure_date > %s) OR \
+            (departure_date = %s AND departure_time > %s)"
+        param_values.extend([valid_date, valid_date, valid_time])
+    else:
+        if param_dict['departure_date'] == valid_date:
+            search_string += " AND departure_time > %s"
+            param_values.append(valid_time)
+
+FIX "FUTURE" FLIGHTS FIRST
+
+DONE FUTURE FLIGHTS FOR ONE WAY (search query displayed in html for debugging purposes)
+removed search query from one way html
+
+ {%if roundtrip%}
+            <td>{{items['S.departure_time']}}</td>
+            <td>{{items['S.arrival_time']}}</td>
+            
+            {%endif%}
+{%if roundtrip%}
+    <th>Departure date (return)</th>
+    <th>Departure time (return)</th>
+    <th>Arrival date (return)</th>
+    <th>Arrival time (return)</th>
+    {%endif%}
+
+cases for roundtrip
+1) if departure_date specified AND return_date specified
+2) if departure_date specified AND return_date not specified
+3) if departure_date not specified AND return_date specified
+4) if departure_date not specified AND return_date not specified
+5) if return_date specified is the valid_return_date

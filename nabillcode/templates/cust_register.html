@@ -7,6 +7,7 @@
     <title>Customer register</title>
 </head>
 <body>
+    <h3>Customer registration</h3>
     <form action="/cust_registerAuth" method="POST">
         <label for="email">Email:</label><br> 
         <input type="email" name="email" required><br>
@@ -17,7 +18,7 @@
             <p class="error"><strong>Error:</strong>{{error}}</p>
         {% endif %}
     </form>
-    <a href = '/register'>Go back</a>
-
+    <a href = '/register'>Go back</a><br>
+    <a href = '/'>Main menu</a>
 </body>
 </html>
