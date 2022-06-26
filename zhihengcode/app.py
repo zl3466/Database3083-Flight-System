@@ -367,6 +367,10 @@ def customer_search_flight_rt():
     return render_template('customer_search_flight.html', data=data, roundtrip=True)
 
 
+@app.route('/go_my_flight', methods=['GET', 'POST'])
+def go_my_flight():
+    return render_template('customer_my_flights.html')
+
 @app.route('/my_flight', methods=['GET', 'POST'])
 def my_flight():
     email = session['email']
@@ -377,6 +381,49 @@ def my_flight():
     cursor.close()
     return render_template('customer_my_flights.html', data=data)
 
+
+@app.route('/past_flight', methods=['GET', 'POST'])
+def past_flight():
+    email = session['email']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+
+    cursor = conn.cursor()
+    query = 'select * from ticket where email=%s and ((departure_date<%s) OR (departure_date=%s and departure_time<%s))'
+    cursor.execute(query, (email, valid_date, valid_date, valid_time))
+    if cursor.fetchone() is None:
+        error = 'No Past Flight Record'
+        return render_template('customer_past_flights.html', error=error)
+    else:
+        data = cursor.fetchall()
+        cursor.close()
+        return render_template('customer_past_flights.html', data=data)
+
+
+@app.route('/rate_comment', methods=['GET', 'POST'])
+def rate_comment():
+    ticket_id = request.form['ticket_id']
+    return render_template('customer_rate_comment.html', ticket_id=ticket_id)
+
+
+@app.route('/make_rate_comment', methods=['GET', 'POST'])
+def make_rate_comment():
+    ticket_id = request.form['ticket_id']
+    rating = request.form['rating']
+    comment = request.form['comment']
+
+    cursor = conn.cursor()
+    if comment is None:
+        query = 'update ticket set rating=%s where ticket_id=%s'
+        cursor.execute(query, (rating, ticket_id))
+    else:
+        query = 'update ticket set rating=%s and comment=%s where ticket_id=%s'
+        cursor.execute(query, (rating, comment, ticket_id))
+    message = 'Thanks for your comment!'
+    cursor.close()
+    return render_template('/make_rate_comment', message=message)
 
 @app.route('/cancel_flight', methods=['GET', 'POST'])
 def cancel_flight():
@@ -464,7 +511,6 @@ def check_spending_specific():
         return render_template('customer_track_spending.html', error='No Purchase Record')
 
 
-
 # unfinished purchase()
 @app.route('/purchase', methods=['GET', 'POST'])
 def purchase():
@@ -474,9 +520,7 @@ def purchase():
     data['departure_date'] = request.form['departure_date']
     data['departure_time'] = request.form['departure_time']
     data['base_price'] = request.form['base_price']
-    print(data['airline_name'])
-    print(data['flight_number'])
-    return render_template('purchase.html', data=data)
+    return render_template('customer_purchase.html', data=data)
 
 
 @app.route('/make_purchase', methods=['GET', 'POST'])
@@ -514,8 +558,6 @@ def make_purchase():
     valid_timestamp = timestamp + timedelta(hours=2)
     valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
-    print((new_ticket_id, card_type, card_number, card_name, exp_date, valid_date,
-                            valid_time, email, airline_name, flight_number, departure_date, departure_time, base_price))
 
     query2 = 'insert into ticket (ticket_id, card_type, card_number, card_name, exp_date, purchase_date, ' \
              'purchase_time, email, airline_name, flight_number, departure_date, departure_time, sold_price)' \
@@ -570,7 +612,6 @@ def staff_search_flight():
     return render_template('staff_view_flight.html', data=data)
 
 
-# unfinished change_status()
 @app.route('/change_status', methods=['GET', 'POST'])
 def change_status():
     new_status = request.form['status']
@@ -695,17 +736,51 @@ def add_airport():
     return render_template('staff_add_airport.html', message=message)
 
 
-@app.route('/view_ratings')
+@app.route('/go_view_ratings')
+def go_view_ratings():
+    return render_template('staff_view_ratings.html')
+
+
+@app.route('/view_ratings', methods=['GET', 'POST'])
 def view_ratings():
-    return
+    airline_name = session['airline_name']
+    flight_number = request.form['flight_number']
+    departure_date = request.form['departure_date']
+    departure_time = request.form['departure_time']
+
+    cursor = conn.cursor()
+
+    query1 = 'select * from ticket where airline_name=%s and flight_number=%s ' \
+             'and departure_date=%s and departure_time=%s'
+    cursor.execute(query1, (airline_name, flight_number, departure_date, departure_time))
+    ticket = cursor.fetchone()
+    if ticket is None:
+        cursor.close()
+        error = 'No Such Ticket or Flight Record'
+        return render_template('staff_view_ratings.html', error=error)
+    else:
+        data = cursor.fetchall()
+        avg = sum(data['rating'])/len(data['rating'])
+        cursor.close()
+        return render_template('staff_view_ratings.html', data=data, avg=avg, ticket=ticket)
 
 
-@app.route('/view_reports')
+@app.route('/go_view_reports')
+def go_view_reports():
+    return render_template('staff_view_reports.html')
+
+
+@app.route('/view_reports', methods=['GET', 'POST'])
 def view_reports():
     return
 
 
-@app.route('/view_revenue')
+@app.route('/go_view_revenue')
+def go_view_revenue():
+    return render_template('staff_view_revenue.html')
+
+
+@app.route('/view_revenue', methods=['GET', 'POST'])
 def view_revenue():
     return
 

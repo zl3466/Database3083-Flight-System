@@ -11,8 +11,8 @@
         <label for="card_type"> Card Type </label></br>
         <input type="text" name = "card_type" list="cards" required/> </br>
             <datalist id="cards" >
-            <option value="Credit"></option>
-            <option value="Debit"></option>
+            <option value="credit"></option>
+            <option value="debit"></option>
             </datalist>
 
         <label for="card_number"> Card Number </label></br>
@@ -23,7 +23,7 @@
         <input type="date" name = "exp_date" required/></br>
 
         {% if data %}
-            <input type="text" name="airline_name" value={{data['airline_name']}} hidden>
+            <input type="text" name="airline_name" value='{{data['airline_name']}}' hidden>
             <input type="text" name="flight_number" value={{data['flight_number']}} hidden>
             <input type="text" name="departure_date" value={{data['departure_date']}} hidden>
             <input type="text" name="departure_time" value={{data['departure_time']}} hidden>
@@ -37,6 +37,6 @@
 		<p class="error"><strong>Error:</strong> {{error}}</p>
 	{% endif %}
 
-<a href="/customer_search_flight">Go back</a>
+    <a href="/customer_search_flight"><button>Go back</button></a>
 </body>
 </html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <form action="/view_ratings" method="POST">
+        <h3>View Customer Feedbacks</h3>
+        <p>
+            <h4>Please Enter Flight Information</h4>
+            <label for="flight_number"> Flight Number </label> </br>
+            <input type="text" name = "flight_number" required/> </br>
+            <label for="departure_date"> Departure Date/Time </label> </br>
+            <input type="date" name = "departure_date" />
+            <input type="time" name = "departure_time" /> </br>
+            <input type="submit" value = Search />
+        </p>
+    </form>
+
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+
+    {% if error %}
+        <h4>{{ error }}</h4>
+    {% else %}
+        <h4>Flight Average Rating</h4>
+        <table>
+            <th>Flight Number</th>
+            <th>Departure Date</th>
+            <th>Departure Time</th>
+            <th>Average Rating</th>
+            <tr>
+                <td>{{ticket['flight_number']}}</td>
+                <td>{{ticket['departure_date']}}</td>
+                <td>{{ticket['departure_time']}}</td>
+                <td>{{avg}}</td>
+            </tr>
+        </table>
+
+        <h4>Customer Feedbacks</h4>
+        <table>
+            <th>Customer Email</th>
+            <th>Rating</th>
+            <th>Comment</th>
+
+        {% for line in data %}
+            <tr>
+                <td>{{line['email']}}</td>
+                <td>{{line['rating']}}</td>
+                <td>{{line['comment']}}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% endif %}
+
+    <a href="/go_view_ratings"><button>Check Another Flight</button></a>
+    <a href="/staff_home"><button>Go back</button></a>
+
+</body>
+</html>
