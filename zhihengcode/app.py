@@ -588,19 +588,111 @@ def change_status():
     return render_template('staff_view_flight.html')
 
 
-@app.route('/add_plane')
+@app.route('/go_add_plane')
 def go_add_plane():
-    return render_template('add_plane.html')
+    return render_template('staff_add_plane.html')
 
 
-@app.route('/add_flight')
+@app.route('/add_plane', methods=['GET', 'POST'])
+def add_plane():
+    airline_name = session['airline_name']
+    plane_id = request.form['plane_id']
+    seat_num = request.form['seat_num']
+    manufacturer = request.form['manufacturer']
+    age = request.form['age']
+    cursor = conn.cursor()
+    query1 = 'select * from airplane where plane_id=%s'
+    cursor.execute(query1, plane_id)
+    plane = cursor.fetchone()
+    if plane is not None:
+        message = 'Error: Plane Already Exist!'
+    else:
+        query2 = 'insert into airplane values(%s, %s, %s, %s, %s)'
+        cursor.execute(query2, (airline_name, plane_id, seat_num, manufacturer, age))
+        conn.commit()
+        message = 'Plane Added Successfully'
+    cursor.close()
+    return render_template('staff_add_plane.html', message=message)
+
+
+@app.route('/go_add_flight')
 def go_add_flight():
-    return render_template('add_flight.html')
+    return render_template('staff_add_flight.html')
 
 
-@app.route('/add_airport')
+@app.route('/add_flight', methods=['GET', 'POST'])
+def add_flight():
+    airline_name = session['airline_name']
+    flight_number = request.form['flight_number']
+    departure_date = request.form['departure_date']
+    departure_time = request.form['departure_time']
+    arrival_date = request.form['arrival_date']
+    arrival_time = request.form['arrival_time']
+    base_price = request.form['base_price']
+    plane_id = request.form['plane_id']
+    status = request.form['status']
+    capacity = int(request.form['capacity'])
+    ticket_count = int(request.form['ticket_count'])
+    src_airport = request.form['src_airport']
+    dst_airport = request.form['dst_airport']
+
+    cursor = conn.cursor()
+
+    query1 = 'select seats from airplane where airline_name=%s and plane_id=%s'
+    cursor.execute(query1, (airline_name, plane_id))
+    max_capacity = cursor.fetchone()
+    # check plane exist, capacity constraints, and duplicate flight
+    if max_capacity is None:
+        message = 'Error: This Plane Does Not Exist !'
+    else:
+        if capacity > max_capacity['seats']:
+            message = 'Error: Capacity Exceeded Max Capacity!'
+        elif ticket_count > capacity:
+            message = 'Error: Ticket Count Exceeded Capacity'
+        else:
+            query2 = 'select * from flight where airline_name=%s and flight_number=%s ' \
+                     'and departure_date=%s and departure_time=%s'
+            cursor.execute(query2, (airline_name, flight_number, departure_date, departure_time))
+            the_flight = cursor.fetchone()
+            if len(the_flight) != 0:
+                message = 'Error: This Flight Already Exists!'
+            else:
+                query3 = 'insert into flight values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                cursor.execute(query3, (airline_name, flight_number, departure_date, departure_time, base_price,
+                                        plane_id, status, capacity, ticket_count, arrival_date, arrival_time,
+                                        src_airport, dst_airport))
+                conn.commit()
+                message = 'Plane Added Successfully'
+    cursor.close()
+    return render_template('staff_add_flight.html', message=message)
+
+
+@app.route('/go_add_airport')
+def go_add_airport():
+    return render_template('staff_add_airport.html')
+
+
+@app.route('/add_airport', methods=['GET', 'POST'])
 def add_airport():
-    return
+    name = request.form['name']
+    city = request.form['city']
+    country = request.form['country']
+    type = request.form['type']
+
+    cursor = conn.cursor()
+
+    query1 = 'select * from airport where name=%s'
+    cursor.execute(query1, name)
+    duplicate = cursor.fetchone()
+    if duplicate is not None:
+        message = 'This Airport Already Exist in System'
+    else:
+        query2 = 'insert into airport values(%s, %s, %s, %s)'
+        cursor.execute(query2, (name, city, country, type))
+        conn.commit()
+        message = 'Airport Added Successfully'
+    cursor.close()
+    return render_template('staff_add_airport.html', message=message)
 
 
 @app.route('/view_ratings')
