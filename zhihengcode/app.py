@@ -829,11 +829,31 @@ def view_record_month():
             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
     cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
     data = cursor.fetchone()
+
+    sales_list = []
+    query2 = 'select count(ticket_id) from ticket where airline_name=%s and email!=%s and ' \
+             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s)) and ' \
+             '((purchase_date<%s) OR (purchase_date=%s and purchase_time<%s))'
+    time_zero = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    for i in range(1, 13):
+        the_month_start = (valid_date - relativedelta(months=i)).replace(day=1)
+        the_month_end = (the_month_start + relativedelta(months=1)).replace(day=1)
+
+        cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
+                                the_month_end, the_month_end, time_zero))
+        the_count = cursor.fetchone()
+        date_range = str(the_month_start) + ' to ' + str(the_month_end)
+        if the_count['count(ticket_id)'] is None:
+            the_count = 0
+        else:
+            the_count = the_count['count(ticket_id)']
+        sales_list.insert(0, (date_range, the_count))
+
     cursor.close()
     if data['count(ticket_id)']:
-        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
+        return render_template('staff_view_reports.html', data=data['count(ticket_id)'], sales_list=sales_list)
     else:
-        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period', sales_list=sales_list)
 
 
 @app.route('/view_report_year', methods=['GET', 'POST'])
@@ -850,12 +870,32 @@ def view_record_year():
             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
     cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
     data = cursor.fetchone()
+
+    sales_list = []
+    query2 = 'select count(ticket_id) from ticket where airline_name=%s and email!=%s and ' \
+             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s)) and ' \
+             '((purchase_date<%s) OR (purchase_date=%s and purchase_time<%s))'
+    time_zero = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    for i in range(1, 13):
+        the_month_start = (valid_date - relativedelta(months=i)).replace(day=1)
+        the_month_end = (the_month_start + relativedelta(months=1)).replace(day=1)
+
+        cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
+                                the_month_end, the_month_end, time_zero))
+        the_count = cursor.fetchone()
+        date_range = str(the_month_start) + ' to ' + str(the_month_end)
+        if the_count['count(ticket_id)'] is None:
+            the_count = 0
+        else:
+            the_count = the_count['count(ticket_id)']
+        sales_list.insert(0, (date_range, the_count))
+
     cursor.close()
 
     if data['count(ticket_id)']:
-        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
+        return render_template('staff_view_reports.html', data=data['count(ticket_id)'], sales_list=sales_list)
     else:
-        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period', sales_list=sales_list)
 
 
 @app.route('/view_report_specific', methods=['GET', 'POST'])
@@ -869,16 +909,39 @@ def view_record_specific():
             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
     cursor.execute(query, (airline_name, 'null', end_date, start_date, start_date))
     data = cursor.fetchone()
+
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    sales_list = []
+    query2 = 'select count(ticket_id) from ticket where airline_name=%s and email!=%s and ' \
+             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s)) and ' \
+             '((purchase_date<%s) OR (purchase_date=%s and purchase_time<%s))'
+    time_zero = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    for i in range(1, 13):
+        the_month_start = (valid_date - relativedelta(months=i)).replace(day=1)
+        the_month_end = (the_month_start + relativedelta(months=1)).replace(day=1)
+
+        cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
+                                the_month_end, the_month_end, time_zero))
+        the_count = cursor.fetchone()
+        date_range = str(the_month_start) + ' to ' + str(the_month_end)
+        if the_count['count(ticket_id)'] is None:
+            the_count = 0
+        else:
+            the_count = the_count['count(ticket_id)']
+        sales_list.insert(0, (date_range, the_count))
+
     cursor.close()
 
     if data['count(ticket_id)']:
-        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
+        return render_template('staff_view_reports.html', data=data['count(ticket_id)'], sales_list=sales_list)
     else:
-        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period', sales_list=sales_list)
 
 
 # ---------------------------------view revenue-------------------------------------------
-# bar chart to be added
 @app.route('/go_view_revenue', methods=['GET', 'POST'])
 def go_view_revenue():
     airline_name = session['airline_name']
@@ -912,11 +975,10 @@ def go_view_revenue():
         cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
                                 the_month_end, the_month_end, time_zero))
         the_revenue = cursor.fetchone()
-
+        date_range = str(the_month_start) + ' to ' + str(the_month_end)
         if the_revenue['sum(sold_price)'] is None:
             the_revenue = 0
         else:
-            date_range = str(the_month_start) + ' to ' + str(the_month_end)
             the_revenue = the_revenue['sum(sold_price)']
         revenue_list.insert(0, (date_range, the_revenue))
 
