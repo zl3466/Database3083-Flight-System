@@ -19,6 +19,7 @@
         {% if data %}
             <table>
                 <th>Airline Name</th>
+                <th>Ticket ID</th>
                 <th>Flight Number</th>
                 <th>Departure Date</th>
                 <th>Departure Time</th>
@@ -27,6 +28,7 @@
                 <form action="/cancel_flight" method="POST">
                 <tr>
                     <td>{{line['airline_name']}}</td>
+                    <td>{{line['ticket_id']}}</td>
                     <td>{{line['flight_number']}}</td>
                     <td>{{line['departure_date']}}</td>
                     <td>{{line['departure_time']}}</td>
