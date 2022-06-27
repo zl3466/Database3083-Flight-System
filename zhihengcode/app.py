@@ -15,6 +15,7 @@ conn = pymysql.connect(host='localhost',
 
 app.secret_key = 'some key that you will never guess'
 
+
 @app.route('/')
 def index():  # put application's code here
     return render_template('index.html')
@@ -370,6 +371,7 @@ def customer_search_flight_rt():
 @app.route('/go_my_flight', methods=['GET', 'POST'])
 def go_my_flight():
     return render_template('customer_my_flights.html')
+
 
 @app.route('/my_flight', methods=['GET', 'POST'])
 def my_flight():
@@ -773,21 +775,22 @@ def view_ratings():
         return render_template('staff_view_ratings.html', error=error)
     else:
         ticket = data[0]
-        avg = round(sum(line['rating'] for line in data)/len(data), 2)
+        avg = round(sum(line['rating'] for line in data) / len(data), 2)
         cursor.close()
         return render_template('staff_view_ratings.html', data=data, avg=avg, ticket=ticket)
 
 
-# ---------------------------------view revenue-------------------------------------------
+# ---------------------------------view frequent customer-------------------------------------------
 @app.route('/go_frequent_customers', methods=['GET', 'POST'])
 def go_frequent_customers():
     airline_name = session['airline_name']
     cursor = conn.cursor()
     query = 'select email, count(ticket_id), sum(sold_price) from ticket where email !=%s and airline_name=%s ' \
-             'group by email order by count(ticket_id) DESC'
+            'group by email order by count(ticket_id) DESC'
     cursor.execute(query, ('null', airline_name))
     customers = cursor.fetchall()
     return render_template('staff_view_frequent_customers.html', customers=customers)
+
 
 @app.route('/view_customer_records', methods=['GET', 'POST'])
 def view_customer_records():
@@ -873,6 +876,7 @@ def view_record_specific():
     else:
         return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
 
+
 # ---------------------------------view revenue-------------------------------------------
 # bar chart to be added
 @app.route('/go_view_revenue', methods=['GET', 'POST'])
@@ -895,12 +899,33 @@ def go_view_revenue():
     cursor.execute(query, (airline_name, 'null', last_year, last_year, valid_time))
     annual_revenue = cursor.fetchone()
 
+    revenue_list = []
+    query2 = 'select sum(sold_price) from ticket where airline_name=%s and email!=%s and ' \
+             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s)) and ' \
+             '((purchase_date<%s) OR (purchase_date=%s and purchase_time<%s))'
+
+    time_zero = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    for i in range(1, 13):
+        the_month_start = (valid_date - relativedelta(months=i)).replace(day=1)
+        the_month_end = (the_month_start + relativedelta(months=1)).replace(day=1)
+
+        cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
+                                the_month_end, the_month_end, time_zero))
+        the_revenue = cursor.fetchone()
+
+        if the_revenue['sum(sold_price)'] is None:
+            the_revenue = 0
+        else:
+            date_range = str(the_month_start) + ' to ' + str(the_month_end)
+            the_revenue = the_revenue['sum(sold_price)']
+        revenue_list.insert(0, (date_range, the_revenue))
+
     if len(monthly_revenue) != 0 and len(annual_revenue) != 0:
         return render_template('staff_view_revenue.html', monthly_revenue=monthly_revenue['sum(sold_price)'],
-                               annual_revenue=annual_revenue['sum(sold_price)'])
+                               annual_revenue=annual_revenue['sum(sold_price)'], revenue_list=revenue_list)
     else:
         return render_template('staff_view_revenue.html', error='Failed to Collect Data')
 
 
 if __name__ == '__main__':
-    app.run('127.0.0.1', 5000, debug = True)
+    app.run('127.0.0.1', 5000, debug=True)
