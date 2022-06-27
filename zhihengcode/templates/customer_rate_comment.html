@@ -28,7 +28,7 @@
             <input type="text" name = "comment" style="height:120px; width:300px;"/></br>
 
             {% if ticket_id %}
-                <input type="text" name="ticket_id" value='{{ticket_id}}' hidden>
+                <input type="number" name="ticket_id" value={{ticket_id}} hidden>
             {% endif %}
             <input type="submit" value = 'Submit' />
         </form>
@@ -37,7 +37,7 @@
         <p class="error"><strong>Error:</strong> {{error}}</p>
     {% endif %}
 
-    <a href="/customer_search_flight">Go back</a>
+    <a href="/customer_home"><button>Go back</button></a>
 
 </body>
 </html>
