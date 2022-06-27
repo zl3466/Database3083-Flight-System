@@ -374,12 +374,20 @@ def go_my_flight():
 @app.route('/my_flight', methods=['GET', 'POST'])
 def my_flight():
     email = session['email']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
     cursor = conn.cursor()
-    query = 'select * from ticket where email=%s'
-    cursor.execute(query, email)
+    query = 'select * from ticket where email=%s and ((departure_date>%s) OR (departure_date=%s and departure_time>%s))'
+    cursor.execute(query, (email, valid_date, valid_date, valid_time))
     data = cursor.fetchall()
     cursor.close()
-    return render_template('customer_my_flights.html', data=data)
+    if len(data) == 0:
+        error = 'No Scheduled Flights in Record'
+        return render_template('customer_my_flights.html', error=error)
+    else:
+        return render_template('customer_my_flights.html', data=data)
 
 
 @app.route('/past_flight', methods=['GET', 'POST'])
@@ -389,16 +397,15 @@ def past_flight():
     valid_timestamp = timestamp + timedelta(hours=2)
     valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
-
     cursor = conn.cursor()
     query = 'select * from ticket where email=%s and ((departure_date<%s) OR (departure_date=%s and departure_time<%s))'
     cursor.execute(query, (email, valid_date, valid_date, valid_time))
-    if cursor.fetchone() is None:
+    data = cursor.fetchall()
+    cursor.close()
+    if len(data) == 0:
         error = 'No Past Flight Record'
         return render_template('customer_past_flights.html', error=error)
     else:
-        data = cursor.fetchall()
-        cursor.close()
         return render_template('customer_past_flights.html', data=data)
 
 
@@ -407,23 +414,24 @@ def rate_comment():
     ticket_id = request.form['ticket_id']
     return render_template('customer_rate_comment.html', ticket_id=ticket_id)
 
-
+# half finished
 @app.route('/make_rate_comment', methods=['GET', 'POST'])
 def make_rate_comment():
     ticket_id = request.form['ticket_id']
     rating = request.form['rating']
     comment = request.form['comment']
-
     cursor = conn.cursor()
-    if comment is None:
+    if len(comment) == 0:
         query = 'update ticket set rating=%s where ticket_id=%s'
         cursor.execute(query, (rating, ticket_id))
     else:
-        query = 'update ticket set rating=%s and comment=%s where ticket_id=%s'
+        query = 'update ticket set rating=%s, comment=%s where ticket_id=%s'
         cursor.execute(query, (rating, comment, ticket_id))
+    conn.commit()
     message = 'Thanks for your comment!'
     cursor.close()
-    return render_template('/make_rate_comment', message=message)
+    return render_template('customer_rate_comment.html', message=message)
+
 
 @app.route('/cancel_flight', methods=['GET', 'POST'])
 def cancel_flight():
@@ -753,13 +761,13 @@ def view_ratings():
     query1 = 'select * from ticket where airline_name=%s and flight_number=%s ' \
              'and departure_date=%s and departure_time=%s'
     cursor.execute(query1, (airline_name, flight_number, departure_date, departure_time))
-    ticket = cursor.fetchone()
-    if ticket is None:
+    data = cursor.fetchall()
+    if len(data) == 0:
         cursor.close()
         error = 'No Such Ticket or Flight Record'
         return render_template('staff_view_ratings.html', error=error)
     else:
-        data = cursor.fetchall()
+        ticket = data[0]
         avg = sum(data['rating'])/len(data['rating'])
         cursor.close()
         return render_template('staff_view_ratings.html', data=data, avg=avg, ticket=ticket)

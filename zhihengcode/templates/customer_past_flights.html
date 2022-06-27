@@ -6,8 +6,8 @@
 </head>
 <body>
     {% if error %}
-        <h3>{{ error }}</h3>
-    {% else %}
+        <h2>{{ error }}</h2>
+    {% elif data %}
         <h3>Past Flights</h3>
         <style type="text/css">
             table, th, td{
@@ -27,7 +27,7 @@
                 <td>{{line['flight_number']}}</td>
                 <td>{{line['departure_date']}}</td>
                 <td>{{line['departure_time']}}</td>
-                <input type="text" name="ticket_id" value={{line['ticket_id']}} hidden/>
+                <input type="number" name="ticket_id" value={{line['ticket_id']}} hidden/>
                 <td><input type="submit" value = 'Rate/Comment' /></td>
             </tr>
             </form>
