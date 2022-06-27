@@ -759,8 +759,8 @@ def view_ratings():
     cursor = conn.cursor()
 
     query1 = 'select * from ticket where airline_name=%s and flight_number=%s ' \
-             'and departure_date=%s and departure_time=%s'
-    cursor.execute(query1, (airline_name, flight_number, departure_date, departure_time))
+             'and departure_date=%s and departure_time=%s and rating!=%s'
+    cursor.execute(query1, (airline_name, flight_number, departure_date, departure_time, 'null'))
     data = cursor.fetchall()
     if len(data) == 0:
         cursor.close()
@@ -768,7 +768,7 @@ def view_ratings():
         return render_template('staff_view_ratings.html', error=error)
     else:
         ticket = data[0]
-        avg = sum(data['rating'])/len(data['rating'])
+        avg = round(sum(line['rating'] for line in data)/len(data), 2)
         cursor.close()
         return render_template('staff_view_ratings.html', data=data, avg=avg, ticket=ticket)
 
