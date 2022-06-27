@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer list</title>
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <a href="/staff_view_flight"><button>Upcoming flights</button></a>
+    <a href="/staff_current_flight"><button>Ongoing flights</button></a>
+    <a href="/staff_past_flight"><button>Past flights</button></a>
+    <h3>Customer list for:</h3>
+    <p>Flight number: {{flight_number}}</p>
+    <p>Departure date: {{departure_date}}</p>
+    <p>Departure time: {{departure_time}}</p>
+    {% if data %}
+    <table>
+        <th>Name</th>
+        <th>Email</th>
+        {% for line in data %}
+        <tr>
+            <td>{{line['C.name']}}</td>
+            <td>{{line['C.email']}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <h4>No customers for this flight</h4>
+    {% endif %}
+    <br>
+    <a href="/staff_home"><button>Home</button></a>
+</body>
+</html>
