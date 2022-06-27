@@ -5,24 +5,25 @@
     <title>Title</title>
 </head>
 <body>
-<style type="text/css">
-	table, th, td{
-		border: 1px solid black;
-	}
-</style>
+    {% if error %}
+        <h2>{{ error }}</h2>
+    {% else %}
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+        <h2>Total Revenue</h2>
+        <table>
+            <th>Past Month</th>
+            <th>Past Year</th>
 
-<table>
-    <th>Monthly Revenue</th>
-	<th>Annual Revenue</th>
-
-{% for line in revenue %}
-	<tr>
-        <td>{{line['monthly_revenue']}}</td>
-		<td>{{line['annual_revenue']}}</td>
-	</tr>
-{% endfor %}
-</table>
-
-<a href="/staff_home">Go back</a>
+            <tr>
+                <td>{{monthly_revenue}}</td>
+                <td>{{annual_revenue}}</td>
+            </tr>
+        </table>
+    {% endif %}
+    <a href="/staff_home"><button>Go back</button></a>
 </body>
 </html>

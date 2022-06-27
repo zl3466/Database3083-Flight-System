@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% if error %}
+        <h2>{{ error }}</h2>
+    {% else %}
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+        <h2>Total Revenue</h2>
+        <table>
+            <th>Email</th>
+            <th>Ticket Count</th>
+            <th>Total Spending</th>
+
+            {% for line in customers %}
+                <form action="/view_customer_records" method="POST">
+                    <tr>
+                        <td>{{line['email']}}</td>
+                        <td>{{line['count(ticket_id)']}}</td>
+                        <td>{{line['sum(sold_price)']}}</td>
+                        <input type="text" name="email" value={{line['email']}} hidden>
+                        <td><input type="submit" value = 'View Purchase Records' /></td>
+                    </tr>
+                </form>
+            {% endfor %}
+        </table>
+    {% endif %}
+    <a href="/staff_home"><button>Go back</button></a>
+</body>
+</html>

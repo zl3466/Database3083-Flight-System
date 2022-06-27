@@ -452,8 +452,8 @@ def customer_track_spending():
     return render_template('customer_track_spending.html')
 
 
-@app.route('/define_period', methods=['GET', 'POST'])
-def define_period():
+@app.route('/spending_define_period', methods=['GET', 'POST'])
+def spending_define_period():
     period = request.form['period']
     return render_template('customer_track_spending.html', period=period)
 
@@ -638,6 +638,7 @@ def change_status():
     return render_template('staff_view_flight.html')
 
 
+# ---------------------------------add plane-------------------------------------------
 @app.route('/go_add_plane')
 def go_add_plane():
     return render_template('staff_add_plane.html')
@@ -665,6 +666,7 @@ def add_plane():
     return render_template('staff_add_plane.html', message=message)
 
 
+# ---------------------------------add flight-------------------------------------------
 @app.route('/go_add_flight')
 def go_add_flight():
     return render_template('staff_add_flight.html')
@@ -717,6 +719,7 @@ def add_flight():
     return render_template('staff_add_flight.html', message=message)
 
 
+# ---------------------------------add airport-------------------------------------------
 @app.route('/go_add_airport')
 def go_add_airport():
     return render_template('staff_add_airport.html')
@@ -745,6 +748,7 @@ def add_airport():
     return render_template('staff_add_airport.html', message=message)
 
 
+# ---------------------------------view ratings-------------------------------------------
 @app.route('/go_view_ratings')
 def go_view_ratings():
     return render_template('staff_view_ratings.html')
@@ -774,26 +778,128 @@ def view_ratings():
         return render_template('staff_view_ratings.html', data=data, avg=avg, ticket=ticket)
 
 
+# ---------------------------------view revenue-------------------------------------------
+@app.route('/go_frequent_customers', methods=['GET', 'POST'])
+def go_frequent_customers():
+    airline_name = session['airline_name']
+    cursor = conn.cursor()
+    query = 'select email, count(ticket_id), sum(sold_price) from ticket where email !=%s and airline_name=%s ' \
+             'group by email order by count(ticket_id) DESC'
+    cursor.execute(query, ('null', airline_name))
+    customers = cursor.fetchall()
+    return render_template('staff_view_frequent_customers.html', customers=customers)
+
+@app.route('/view_customer_records', methods=['GET', 'POST'])
+def view_customer_records():
+    airline_name = session['airline_name']
+    email = request.form['email']
+    cursor = conn.cursor()
+    query = 'select * from ticket where email =%s and airline_name=%s '
+    cursor.execute(query, (email, airline_name))
+    record = cursor.fetchall()
+    return render_template('staff_view_customer_records.html', record=record, email=email)
+
+
+# ---------------------------------view report-------------------------------------------
 @app.route('/go_view_reports')
 def go_view_reports():
     return render_template('staff_view_reports.html')
 
 
-@app.route('/view_reports', methods=['GET', 'POST'])
-def view_reports():
-    return
+@app.route('/sale_define_period', methods=['GET', 'POST'])
+def sale_define_period():
+    period = request.form['period']
+    return render_template('staff_view_reports.html', period=period)
 
 
-@app.route('/go_view_revenue')
+@app.route('/view_report_month', methods=['GET', 'POST'])
+def view_record_month():
+    airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    start_date = valid_date - relativedelta(months=1)
+    cursor = conn.cursor()
+
+    query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+    cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
+    data = cursor.fetchone()
+    cursor.close()
+    if data['count(ticket_id)']:
+        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
+    else:
+        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+
+
+@app.route('/view_report_year', methods=['GET', 'POST'])
+def view_record_year():
+    airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    start_date = valid_date - relativedelta(years=1)
+    cursor = conn.cursor()
+
+    query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+    cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
+    data = cursor.fetchone()
+    cursor.close()
+
+    if data['count(ticket_id)']:
+        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
+    else:
+        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+
+
+@app.route('/view_report_specific', methods=['GET', 'POST'])
+def view_record_specific():
+    airline_name = session['airline_name']
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+    cursor = conn.cursor()
+
+    query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+    cursor.execute(query, (airline_name, 'null', end_date, start_date, start_date))
+    data = cursor.fetchone()
+    cursor.close()
+
+    if data['count(ticket_id)']:
+        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
+    else:
+        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+
+# ---------------------------------view revenue-------------------------------------------
+# bar chart to be added
+@app.route('/go_view_revenue', methods=['GET', 'POST'])
 def go_view_revenue():
-    return render_template('staff_view_revenue.html')
+    airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    last_month = valid_date - relativedelta(months=1)
+    last_year = valid_date - relativedelta(years=1)
+    cursor = conn.cursor()
 
+    query = 'select sum(sold_price) from ticket where airline_name=%s and email!=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
 
-@app.route('/view_revenue', methods=['GET', 'POST'])
-def view_revenue():
-    return
+    cursor.execute(query, (airline_name, 'null', last_month, last_month, valid_time))
+    monthly_revenue = cursor.fetchone()
 
+    cursor.execute(query, (airline_name, 'null', last_year, last_year, valid_time))
+    annual_revenue = cursor.fetchone()
 
+    if len(monthly_revenue) != 0 and len(annual_revenue) != 0:
+        return render_template('staff_view_revenue.html', monthly_revenue=monthly_revenue['sum(sold_price)'],
+                               annual_revenue=annual_revenue['sum(sold_price)'])
+    else:
+        return render_template('staff_view_revenue.html', error='Failed to Collect Data')
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@
 
     <h2>Total Spending Record</h2>
     {% if not period and not data and not error%}
-        <form action="/define_period" method="POST">
+        <form action="/spending_define_period" method="POST">
             <input type="text" name="period" list="period_choice">
             <datalist id="period_choice">
                 <option value="specific period"></option>
