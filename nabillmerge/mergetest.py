@@ -24,17 +24,12 @@ connection = pymysql.connect(host = 'localhost',
 def index():
     return render_template('index.html')
 
-# login route
-@app.route('/login')
-def login():
-    return render_template('login.html')
+# ---------------------------------REGISTER-------------------------------------------
 
 # register route
 @app.route('/register')
 def register():
     return render_template('register.html')
-
-# ---------------------------------REGISTER-------------------------------------------
 
 # customer register route
 @app.route('/customer_register')
@@ -190,6 +185,11 @@ def staff_phones_emails():
     return render_template('index.html')
 
 # ---------------------------------LOGIN-------------------------------------------
+
+# login route
+@app.route('/login')
+def login():
+    return render_template('login.html')
 
 # customer login route
 @app.route('/customer_login')
@@ -851,8 +851,12 @@ def staff_view_flight():
     cursor.execute(query, (valid_date, valid_date, valid_time, airline_name, end_date))
     future = cursor.fetchall()
 
-    return render_template('staff_view_flight.html', future=future, today_date=valid_date, available=True)
+    default = "(Default range: Next 30 days)"
 
+    return render_template('staff_view_flight.html', future=future, today_date=valid_date, available=True, default_range = default)
+
+# route for searching future flights
+# future flights -- flights that depart within given range (minimum 2 hours from now())
 @app.route('/staff_search_flight', methods=['GET', 'POST'])
 def staff_search_flight():
    # valid time/date
@@ -936,9 +940,10 @@ def staff_search_flight():
 
     if len(future)<1:
         available = False
-
+    
     return render_template('staff_view_flight.html',today_date=valid_date, future=future, available=available, 
                             initial_src=src, initial_dst=dst)
+
 
 @app.route('/staff_current_flight')
 def staff_current_flight():
@@ -996,11 +1001,7 @@ def staff_search_current():
 
     param_tuple = tuple(param_values)
     query += predicate_end
-
     cursor = connection.cursor()
-    # query to get current flights
-    # current flights classified as flights depart at most 2 hours before now() \
-    # and that land after now() 
     cursor.execute(query,param_tuple)
     current = cursor.fetchall()
     cursor.close()
@@ -1012,6 +1013,8 @@ def staff_search_current():
     return render_template('staff_current_flight.html', current = current, initial_src=src,
                             initial_dst=dst, available=available)
 
+# route for past flights
+# default shows all
 @app.route('/staff_past_flight')
 def staff_past_flight():
     airline_name = session['airline_name']
@@ -1022,14 +1025,101 @@ def staff_past_flight():
 
     cursor = connection.cursor()
     # query to get past flight data
-    # past flies classified as flights that landed before now()
+    # past flights classified as flights that landed before now()
     query = 'SELECT * FROM flight WHERE ((arrival_date<%s) OR (arrival_date=%s AND arrival_time<=%s))  \
             AND airline_name=%s'
     cursor.execute(query, (valid_date, valid_date, now_time, airline_name))
     past = cursor.fetchall()
 
     cursor.close()
-    return render_template('staff_past_flight.html', past = past)
+    return render_template('staff_past_flight.html', past = past, today_date=valid_date)
+
+# route for searching past flights
+# for given range(start_date,end_date), query will display flights that depart
+# from start_date and have landed by end_date
+@app.route('/staff_search_past', methods=['GET', 'POST'])
+def staff_search_past():
+   # valid time/date
+    airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_date = valid_timestamp.date()
+    now_time = timestamp.time()
+
+
+    # dictionary for search parameters
+    param_dict = {}
+    date_input = {} 
+    date_input['start_date'] = request.form['start_date']
+    date_input['end_date'] = request.form['end_date']
+    param_dict['src_name'] = request.form['src_name']
+    param_dict['dst_name'] = request.form['dst_name']
+
+    query = "SELECT * FROM flight WHERE airline_name=%s"
+    # list of search parameter keys
+    param_keys = []
+    # list of search parameter values
+    param_values = [airline_name]
+    predicate = ""
+
+    startinsearch = True
+    endinsearch = True
+
+    if len(date_input['start_date'])<1:
+        startinsearch  = False
+    else:
+        if date_input['start_date'] == valid_date:
+            predicate += " AND departure_date=%s"
+            param_values.append(valid_date)
+            startinsearch = False
+    
+    if startinsearch:
+        predicate += " AND departure_date>=%s"
+        param_values.append(date_input['start_date'])
+
+    if len(date_input['end_date'])<1:
+        predicate += " AND (arrival_date<%s OR (arrival_date=%s AND arrival_time<%s))"
+        param_values.extend([valid_date, valid_date, now_time])
+        endinsearch = False
+    else:
+        if date_input['end_date'] == valid_date:
+            predicate += " AND (arrival_date=%s AND arrival_time<%s)"
+            param_values.extend([valid_date, now_time])
+            endinsearch = False
+
+    if endinsearch:
+        predicate += " AND arrival_date<=%s"
+        param_values.append(date_input['end_date'])
+
+    for items in param_dict:
+        if len(param_dict[items])>1:
+            param_keys.append(items)
+
+    src = ""
+    dst = ""
+
+    if len(param_keys)>0:
+        for items in param_keys:
+            predicate += " AND {} = %s".format(items)
+            param_values.append(param_dict[items])
+            if items == 'src_name':
+                src = param_dict[items]
+            if items == 'dst_name':
+                dst = param_dict[items]
+        
+    param_tuple = tuple(param_values)
+    search = query + predicate
+    cursor = connection.cursor()
+    cursor.execute(search, param_tuple)
+    past = cursor.fetchall()
+    cursor.close()
+    available = True
+
+    if len(past)<1:
+        available = False
+
+    return render_template('staff_past_flight.html',today_date=valid_date, past=past, available=available, 
+                            initial_src=src, initial_dst=dst)
 
 @app.route('/change_status', methods=['GET', 'POST'])
 def change_status():
@@ -1047,6 +1137,24 @@ def change_status():
         cursor.close()
     return render_template('staff_view_flight.html')
 
+@app.route('/flight_view_customers', methods=['GET','POST'])
+def flight_view_customer():
+    airline_name = session['airline_name']
+    flight_number = request.form['flight_number']
+    departure_date = request.form['departure_date']
+    departure_time = request.form['departure_time']
+    query = 'SELECT C.name, C.email FROM customer as C, ticket as T, flight as F WHERE C.email = T.email \
+            AND T.airline_name = F.airline_name AND T.flight_number = F.flight_number AND \
+            T.departure_date = F.departure_date AND T.departure_time = F.departure_time AND \
+            F.airline_name = %s AND F.flight_number = %s AND F.departure_date = %s AND \
+            F.departure_time = %s'
+
+    cursor = connection.cursor()
+    cursor.execute(query,(airline_name, flight_number, departure_date, departure_time))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('flight_customer_list.html', data = data, flight_number = flight_number,
+                            departure_date = departure_date, departure_time = departure_time)
 
 @app.route('/go_add_plane')
 def go_add_plane():
@@ -1079,6 +1187,17 @@ def add_plane():
 def go_add_flight():
     return render_template('staff_add_flight.html')
 
+# helper function to generate ticket_ids for flights
+def generateTickets(airline_name, flight_number, departure_date, departure_time, count):
+    cursor = connection.cursor()
+    for number in range(count):
+        ticket_id = airline_name + flight_number + departure_date + departure_time + str(number)
+        ins = "INSERT INTO ticket(ticket_id, airline_name, flight_number, departure_date, departure_time) \
+                VALUES(%s,%s,%s,%s,%s)"
+        cursor.execute(ins,(ticket_id,airline_name, flight_number, departure_date, departure_time))
+        connection.commit()
+    cursor.close()
+    return
 
 @app.route('/add_flight', methods=['GET', 'POST'])
 def add_flight():
@@ -1114,15 +1233,16 @@ def add_flight():
                      'and departure_date=%s and departure_time=%s'
             cursor.execute(query2, (airline_name, flight_number, departure_date, departure_time))
             the_flight = cursor.fetchone()
-            if len(the_flight) != 0:
+            if the_flight is not None:
                 message = 'Error: This Flight Already Exists!'
             else:
-                query3 = 'insert into flight values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                query3 = 'insert into flight values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
                 cursor.execute(query3, (airline_name, flight_number, departure_date, departure_time, base_price,
-                                        plane_id, status, capacity, ticket_count, arrival_date, arrival_time,
+                                        plane_id, status, ticket_count, arrival_date, arrival_time,
                                         src_airport, dst_airport))
                 connection.commit()
-                message = 'Plane Added Successfully'
+                generateTickets(airline_name, flight_number, departure_date, departure_time, ticket_count)
+                message = 'Flight Added Successfully'
     cursor.close()
     return render_template('staff_add_flight.html', message=message)
 
