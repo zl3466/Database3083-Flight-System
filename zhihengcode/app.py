@@ -414,6 +414,7 @@ def rate_comment():
     ticket_id = request.form['ticket_id']
     return render_template('customer_rate_comment.html', ticket_id=ticket_id)
 
+
 # half finished
 @app.route('/make_rate_comment', methods=['GET', 'POST'])
 def make_rate_comment():
