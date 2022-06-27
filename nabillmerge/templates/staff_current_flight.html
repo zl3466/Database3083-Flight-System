@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <a href="/staff_view_flight"><button>Upcoming flights</button></a>
+    <a href="/staff_past_flight"><button>Past flights</button></a>
+    <h3>Staff View Upcoming Flights</h3>
+        <form action="/staff_search_current" method="POST">
+            <p>
+            <label for="src_name">From (airport)</label><br> 
+            <input type="text" name="src_name" ><br>
+            <label for="dst_name">To (airport)</label><br> 
+            <input type="text" name="dst_name" ><br>
+            <input type="submit" value = Show />
+            </p>
+        </form>
+
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+        {% if not available %}
+        <h3>No flights matching query</h3>
+        {% endif %}
+        {% if current %}
+        <h5>Ongoing flights</h5>
+            <table>
+            <th>Flight Number</th>
+            <th>Plane ID</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Status</th>
+            {% for line in current %}
+                <tr>
+                    <td>{{line['flight_number']}}</td>
+                    <td>{{line['plane_id']}}</td>
+                    <td>{{line['src_name']}}</td>
+                    <td>{{line['dst_name']}}</td>
+                    <td>{{line['status']}}</td>
+                    <input type="text" name="flight_number" value="{{line['flight_number']}}" hidden/>
+                    <input type="text" name="departure_date" value="{{line['departure_date']}}" hidden/>
+                    <input type="text" name="departure_time" value="{{line['departure_time']}}" hidden/>
+                    <td><input type="text" name="status" list="status_choice">
+                        <datalist id="status_choice" >
+                        <option value="on time"></option>
+                        <option value="delayed"></option>
+                        </datalist>
+                        <input type="submit" value = Confirm />
+                    </td>
+                </tr>
+                </form>
+            {% endfor %}
+            </table>
+            {% endif %}
+            <br>
+        <a href="/staff_home"><button>Go back</button></a>
+</body>
+</html>
