@@ -783,6 +783,20 @@ def cancel_flight():
     query = 'update ticket set card_type=%s, card_number=%s, exp_date=%s, purchase_date=%s, purchase_time=%s, email=%s ' \
             'where ticket_id=%s'
     cursor.execute(query, (None, None, None, None, None, None, ticket_id))
+    
+    # decreasing ticket_count
+    query = 'SELECT * FROM flight NATURAL JOIN ticket WHERE ticket_id=%s'
+    cursor.execute(query,ticket_id)
+    data = cursor.fetchone()
+    count = data['ticket_count']
+    count -= 1
+    airline_name = data['airline_name']
+    flight_number = data['flight_number']
+    departure_date = data['departure_date']
+    departure_time = data['departure_time']
+    update_ticket_count = 'UPDATE flight SET ticket_count=%s WHERE (airline_name,\
+        flight_number, departure_date,departure_time)=(%s,%s,%s,%s)'
+    cursor.execute(update_ticket_count,(count,airline_name,flight_number,departure_date,departure_time))
     connection.commit()
     cursor.close()
     return render_template('customer_my_flights.html')
