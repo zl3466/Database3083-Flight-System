@@ -5,7 +5,6 @@
     <title>Title</title>
 </head>
 <body>
-
     <form action="/make_purchase" method="POST">
         <h2>Payment Information</h2>
         <label for="card_type"> Card Type </label></br>
@@ -14,7 +13,7 @@
             <option value="credit"></option>
             <option value="debit"></option>
             </datalist>
-
+            
         <label for="card_number"> Card Number </label></br>
         <input type="text" name = "card_number" required/></br>
         <label for="card_name"> Card Name </label></br>
@@ -23,20 +22,47 @@
         <input type="date" name = "exp_date" required/></br>
 
         {% if data %}
-            <input type="text" name="airline_name" value='{{data['airline_name']}}' hidden>
-            <input type="text" name="flight_number" value={{data['flight_number']}} hidden>
-            <input type="text" name="departure_date" value={{data['departure_date']}} hidden>
-            <input type="text" name="departure_time" value={{data['departure_time']}} hidden>
-            <input type="text" name="base_price" value={{data['base_price']}} hidden>
+            <input type="text" name="airline_name" value="{{data['airline_name']}}" hidden>
+            <input type="text" name="flight_number" value="{{data['flight_number']}}" hidden>
+            <input type="text" name="departure_date" value="{{data['departure_date']}} "hidden>
+            <input type="text" name="departure_time" value="{{data['departure_time']}}" hidden>
+            <input type="text" name="sold_price" value="{{bill[4]}}" hidden>
         {% endif %}
+	{% if bill %}
+    <br>
+    <table>
+        <th>Item</th>
+        <th>Cost</th>
+        <tr>
+            <td>Original capacity</td>
+            <td>{{bill[0]}}</td>
+        </tr>
+        <tr>
+            <td>Current capacity</td>
+            <td>{{bill[1]}}%</td>
+        </tr>
 
+        <tr>
+            <td>Multiplier</td>
+            <td>{{bill[2]}}</td>
+        </tr>
+        <tr>
+            <td>Base price</td>
+            <td>{{bill[3]}}</td>
+        </tr>
+        <tr>
+            <td>Final price</td>
+            <td>{{bill[4]}}</td>
+        </tr>
+    </table>
+    <br>
         <input type="submit" value = Purchase />
     </form>
-
-	{% if error %}
-		<p class="error"><strong>Error:</strong> {{error}}</p>
 	{% endif %}
-
+	{% if error %}
+    <p class="error"><strong>Error:</strong> {{error}}</p>
+	{% endif %}
+    <br>
     <a href="/customer_search_flight"><button>Go back</button></a>
 </body>
 </html>
