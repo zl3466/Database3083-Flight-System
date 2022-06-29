@@ -1449,14 +1449,13 @@ def view_record_month():
     airline_name = session['airline_name']
     timestamp = datetime.now()
     valid_timestamp = timestamp
-    valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
     start_date = valid_date - relativedelta(months=1)
     cursor = connection.cursor()
 
     query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
-            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
-    cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
+            'purchase_date>=%s'
+    cursor.execute(query, (airline_name, 'null', start_date))
     data = cursor.fetchone()
     cursor.close()
     if data['count(ticket_id)']:
@@ -1470,14 +1469,13 @@ def view_record_year():
     airline_name = session['airline_name']
     timestamp = datetime.now()
     valid_timestamp = timestamp
-    valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
     start_date = valid_date - relativedelta(years=1)
     cursor = connection.cursor()
 
     query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
-            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
-    cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
+            'purchase_date>=%s'
+    cursor.execute(query, (airline_name, 'null', start_date))
     data = cursor.fetchone()
     cursor.close()
 
@@ -1495,8 +1493,8 @@ def view_record_specific():
     cursor = connection.cursor()
 
     query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
-            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
-    cursor.execute(query, (airline_name, 'null', end_date, start_date, start_date))
+            'purchase_date>=%s OR purchase_date<=%s'
+    cursor.execute(query, (airline_name, 'null', start_date, end_date))
     data = cursor.fetchone()
     cursor.close()
 
