@@ -1193,6 +1193,54 @@ def staff_logout():
     return redirect(url_for('staff_login'))
 
 
+# ---------------------------------view revenue-------------------------------------------
+@app.route('/go_view_revenue', methods=['GET', 'POST'])
+def go_view_revenue():
+    airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    last_month = valid_date - relativedelta(months=1)
+    last_year = valid_date - relativedelta(years=1)
+    cursor = connection.cursor()
+
+    query = 'select sum(sold_price) from ticket where airline_name=%s and email!=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+
+    cursor.execute(query, (airline_name, 'null', last_month, last_month, valid_time))
+    monthly_revenue = cursor.fetchone()
+
+    cursor.execute(query, (airline_name, 'null', last_year, last_year, valid_time))
+    annual_revenue = cursor.fetchone()
+
+    revenue_list = []
+    query2 = 'select sum(sold_price) from ticket where airline_name=%s and email!=%s and ' \
+             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s)) and ' \
+             '((purchase_date<%s) OR (purchase_date=%s and purchase_time<%s))'
+
+    time_zero = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    for i in range(1, 13):
+        the_month_start = (valid_date - relativedelta(months=i)).replace(day=1)
+        the_month_end = (the_month_start + relativedelta(months=1)).replace(day=1)
+
+        cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
+                                the_month_end, the_month_end, time_zero))
+        the_revenue = cursor.fetchone()
+        date_range = str(the_month_start) + ' to ' + str(the_month_end)
+        if the_revenue['sum(sold_price)'] is None:
+            the_revenue = 0
+        else:
+            the_revenue = the_revenue['sum(sold_price)']
+        revenue_list.insert(0, (date_range, the_revenue))
+
+    if len(monthly_revenue) != 0 and len(annual_revenue) != 0:
+        return render_template('staff_view_revenue.html', monthly_revenue=monthly_revenue['sum(sold_price)'],
+                               annual_revenue=annual_revenue['sum(sold_price)'], revenue_list=revenue_list)
+    else:
+        return render_template('staff_view_revenue.html', error='Failed to Collect Data')
+
+
 # ----------------------------------------------------------------------------------
 
 def flight_search(page):
