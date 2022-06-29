@@ -1,7 +1,5 @@
 from crypt import methods
-from email.mime import base
 from os import times
-from sqlite3 import connect
 from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors, hashlib
 from datetime import timedelta
@@ -532,6 +530,32 @@ def my_flight():
     cursor.close()
     return render_template('customer_my_flights.html', future=future, current=current, past=past)
 
+@app.route('/cancel_flight', methods=['GET', 'POST'])
+def cancel_flight():
+    ticket_id = request.form['ticket_id']
+    cursor = connection.cursor()
+    # query = 'delete from ticket where ticket_id=%s'
+    query = 'update ticket set card_type=%s, card_number=%s, exp_date=%s, purchase_date=%s, purchase_time=%s, email=%s ' \
+            'where ticket_id=%s'
+    cursor.execute(query, (None, None, None, None, None, None, ticket_id))
+    
+    # decreasing ticket_count
+    query = 'SELECT * FROM flight NATURAL JOIN ticket WHERE ticket_id=%s'
+    cursor.execute(query,ticket_id)
+    data = cursor.fetchone()
+    count = data['ticket_count']
+    count -= 1
+    airline_name = data['airline_name']
+    flight_number = data['flight_number']
+    departure_date = data['departure_date']
+    departure_time = data['departure_time']
+    update_ticket_count = 'UPDATE flight SET ticket_count=%s WHERE (airline_name,\
+        flight_number, departure_date,departure_time)=(%s,%s,%s,%s)'
+    cursor.execute(update_ticket_count,(count,airline_name,flight_number,departure_date,departure_time))
+    connection.commit()
+    cursor.close()
+    return redirect(url_for('my_flight'))
+
 # ---------------------------------search flights-------------------------------------------
 @app.route('/customer_oneway')
 def customer_oneway():
@@ -645,24 +669,6 @@ def customer_search_flight_rt():
     cursor.close()
     return render_template('customer_search_flight.html', data=data, roundtrip=True)
 
-@app.route('/past_flight', methods=['GET', 'POST'])
-def past_flight():
-    email = session['email']
-    timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours=2)
-    valid_time = valid_timestamp.time()
-    valid_date = valid_timestamp.date()
-
-    cursor = connection.cursor()
-    query = 'select * from ticket where email=%s and ((departure_date<%s) OR (departure_date=%s and departure_time<%s))'
-    cursor.execute(query, (email, valid_date, valid_date, valid_time))
-    if cursor.fetchone() is None:
-        error = 'No Past Flight Record'
-        return render_template('customer_past_flights.html', error=error)
-    else:
-        data = cursor.fetchall()
-        cursor.close()
-        return render_template('customer_past_flights.html', data=data)
 
 # ---------------------------------purchase ticket-------------------------------------------
 # helper function to determine ticket pricing
@@ -777,31 +783,6 @@ def make_rate_comment():
     cursor.close()
     return render_template('/make_rate_comment', message=message)
 
-@app.route('/cancel_flight', methods=['GET', 'POST'])
-def cancel_flight():
-    ticket_id = request.form['ticket_id']
-    cursor = connection.cursor()
-    # query = 'delete from ticket where ticket_id=%s'
-    query = 'update ticket set card_type=%s, card_number=%s, exp_date=%s, purchase_date=%s, purchase_time=%s, email=%s ' \
-            'where ticket_id=%s'
-    cursor.execute(query, (None, None, None, None, None, None, ticket_id))
-    
-    # decreasing ticket_count
-    query = 'SELECT * FROM flight NATURAL JOIN ticket WHERE ticket_id=%s'
-    cursor.execute(query,ticket_id)
-    data = cursor.fetchone()
-    count = data['ticket_count']
-    count -= 1
-    airline_name = data['airline_name']
-    flight_number = data['flight_number']
-    departure_date = data['departure_date']
-    departure_time = data['departure_time']
-    update_ticket_count = 'UPDATE flight SET ticket_count=%s WHERE (airline_name,\
-        flight_number, departure_date,departure_time)=(%s,%s,%s,%s)'
-    cursor.execute(update_ticket_count,(count,airline_name,flight_number,departure_date,departure_time))
-    connection.commit()
-    cursor.close()
-    return render_template('customer_my_flights.html')
 
 # ---------------------------------track spending-------------------------------------------
 
@@ -1392,7 +1373,7 @@ def sale_define_period():
 def view_record_month():
     airline_name = session['airline_name']
     timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_timestamp = timestamp
     valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
     start_date = valid_date - relativedelta(months=1)
@@ -1413,7 +1394,7 @@ def view_record_month():
 def view_record_year():
     airline_name = session['airline_name']
     timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_timestamp = timestamp
     valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
     start_date = valid_date - relativedelta(years=1)
@@ -1448,6 +1429,53 @@ def view_record_specific():
         return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
     else:
         return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+
+# ---------------------------------view revenue-------------------------------------------
+@app.route('/go_view_revenue', methods=['GET', 'POST'])
+def go_view_revenue():
+    airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    last_month = valid_date - relativedelta(months=1)
+    last_year = valid_date - relativedelta(years=1)
+    cursor = connection.cursor()
+
+    query = 'select sum(sold_price) from ticket where airline_name=%s and email!=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+
+    cursor.execute(query, (airline_name, 'null', last_month, last_month, valid_time))
+    monthly_revenue = cursor.fetchone()
+
+    cursor.execute(query, (airline_name, 'null', last_year, last_year, valid_time))
+    annual_revenue = cursor.fetchone()
+
+    revenue_list = []
+    query2 = 'select sum(sold_price) from ticket where airline_name=%s and email!=%s and ' \
+             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s)) and ' \
+             '((purchase_date<%s) OR (purchase_date=%s and purchase_time<%s))'
+
+    time_zero = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    for i in range(1, 13):
+        the_month_start = (valid_date - relativedelta(months=i)).replace(day=1)
+        the_month_end = (the_month_start + relativedelta(months=1)).replace(day=1)
+
+        cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
+                                the_month_end, the_month_end, time_zero))
+        the_revenue = cursor.fetchone()
+        date_range = str(the_month_start) + ' to ' + str(the_month_end)
+        if the_revenue['sum(sold_price)'] is None:
+            the_revenue = 0
+        else:
+            the_revenue = the_revenue['sum(sold_price)']
+        revenue_list.insert(0, (date_range, the_revenue))
+
+    if len(monthly_revenue) != 0 and len(annual_revenue) != 0:
+        return render_template('staff_view_revenue.html', monthly_revenue=monthly_revenue['sum(sold_price)'],
+                               annual_revenue=annual_revenue['sum(sold_price)'], revenue_list=revenue_list)
+    else:
+        return render_template('staff_view_revenue.html', error='Failed to Collect Data')
 
  # ---------------------------------LOGOUT-------------------------------------------
 @app.route('/customer_logout')
