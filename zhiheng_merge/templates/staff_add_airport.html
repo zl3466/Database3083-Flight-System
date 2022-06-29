@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% if not message %}
+        <h3>Please Enter Airport Information</h3>
+        <form action="/add_airport" method="POST">
+            <p>
+                <h3> Add Airport </h3>
+                <label for="name"> Airport Name </label> </br>
+                <input type="text" name = "name" /> </br>
+
+                <label for="city"> City </label> </br>
+                <input type="text" name = "city" /> </br>
+
+                <label for="country"> Country </label> </br>
+                <input type="text" name = "country" /> </br>
+
+                <label for="type"> Type </label> </br>
+                <input type="text" name = "type" list="type_list"/> </br>
+                    <datalist id="type_list" >
+                        <option value="domestic"></option>
+                        <option value="international"></option>
+                        <option value="both"></option>
+                    </datalist></br>
+                <input type="submit" value = 'Add Airport' />
+            </p>
+        </form>
+    {% else %}
+        <h3>{{ message }}</h3>
+        <a href="/go_add_airport"><button>Add Another Airport</button></a> </br>
+    {% endif %}
+    <a href="/staff_home"><button>Home</button></a>
+</body>
+</html>
