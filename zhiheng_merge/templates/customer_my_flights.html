@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    {% if message %}
+        <h2>{{message}}</h2>
+    {% else %}
+        {% if not upcoming %}
+            <h5>No upcoming flights</h5>
+        {% endif %}
+        {% if upcoming %}
+            <h3>Upcoming flights</h3>
+            <table>
+                <th>Airline Name</th>
+                <th>Flight Number</th>
+                <th>Departure Date</th>
+                <th>Departure Time</th>
+                <th>Arrival Date</th>
+                <th>Arrival Time</th>
+
+            {% for line in future %}
+                <form action="/cancel_flight" method="POST">
+                <tr>
+                    <td>{{line['airline_name']}}</td>
+                    <td>{{line['flight_number']}}</td>
+                    <td>{{line['departure_date']}}</td>
+                    <td>{{line['departure_time']}}</td>
+                    <td>{{line['arrival_date']}}</td>
+                    <td>{{line['arrival_time']}}</td>
+                    <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
+                    <td><input type="submit" value = Cancel /></td>
+                </tr>
+                </form>
+            {% endfor %}
+            </table>
+        {% endif %}
+        {% if not current %}
+            <h5>No ongoing flights</h5>
+        {% endif %}
+        {%if current %}
+            <h3>Current flights</h3>
+            <table>
+                <th>Airline Name</th>
+                <th>Flight Number</th>
+                <th>Departure Date</th>
+                <th>Departure Time</th>
+                <th>Arrival Date</th>
+                <th>Arrival Time</th>
+
+            {% for line in current %}
+                <tr>
+                    <td>{{line['airline_name']}}</td>
+                    <td>{{line['flight_number']}}</td>
+                    <td>{{line['departure_date']}}</td>
+                    <td>{{line['departure_time']}}</td>
+                    <td>{{line['arrival_date']}}</td>
+                    <td>{{line['arrival_time']}}</td>
+                </tr>
+            {% endfor %}
+            </table>
+        {% endif %}
+        {% if not past %}
+            <h5>No past flights</h5>
+        {% endif %}
+        {%if past %}
+            <h3>Past flights</h3>
+            <table>
+                <th>Airline Name</th>
+                <th>Flight Number</th>
+                <th>Departure Date</th>
+                <th>Departure Time</th>
+                <th>Arrival Date</th>
+                <th>Arrival Time</th>
+
+            {% for line in past %}
+                <tr>
+                    <td>{{line['airline_name']}}</td>
+                    <td>{{line['flight_number']}}</td>
+                    <td>{{line['departure_date']}}</td>
+                    <td>{{line['departure_time']}}</td>
+                    <td>{{line['arrival_date']}}</td>
+                    <td>{{line['arrival_time']}}</td>
+                </tr>
+            {% endfor %}
+            </table>
+        {% endif %}
+        <br>
+    {% endif %}
+    <a href="/customer_home">Home</a><br>
+    <a href="/customer_logout">Log out</a>
+</body>
+</html>

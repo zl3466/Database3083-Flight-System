@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>View flights</title>
+</head>
+<body>
+    <a href="/public_view_flights"><button>One way</button></a>
+    <a href="/public_view_flightsRT"><button>Round trip</button></a>
+    <h3>Search upcoming flights</h3>
+    {% if roundtrip %}
+        <form action="/public_flightsearchRT" method="POST">
+    {% else %}
+        <form action="/public_flightsearch" method="POST">
+    {% endif %}
+        <label for="src_name">From (airport)</label><br> 
+        <input type="text" name="src_name"><br>
+        <label for="dst_name">To (airport)</label><br> 
+        <input type="text" name="dst_name"><br>
+        <label for="departure_date">Departure date</label><br> 
+        <input type="date" name="departure_date" min="{{today_date}}""><br>
+        {% if roundtrip %}
+        <label for="return_date" name="return_date" min="{{valid_return_date}}">Departure date (return)</label><br>
+        <input type="date" name="return_date" ><br>
+        {% endif %}
+        <br><input type="submit" value = Search><br>
+    </form>
+    {% if not available %}
+        <h3>No upcoming flights matching search</h3>
+    {% endif %}
+    {% if data %}
+        <h3>Upcoming Flights</h3>
+        <table>
+            {% if roundtrip %}
+            <tr>
+                <th colspan="7">Outbound</th>
+            </tr>
+            {% endif %}
+            <th>Airline</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Departure date</th>
+            <th>Departure time</th>
+            <th>Arrival date</th>
+            <th>Arrival time</th>
+            {% for items in data %}
+            <tr>
+                <td>{{items['airline_name']}}</td>
+                <td>{{items['src_name']}}</td>
+                <td>{{items['dst_name']}}</td>
+                <td>{{items['departure_date']}}</td>
+                <td>{{items['departure_time']}}</td>
+                <td>{{items['arrival_date']}}</td>
+                <td>{{items['arrival_time']}}</td>
+            </tr>
+            {% endfor %}
+        </table><br>
+        {% if roundtrip %}
+        <br><table>
+            <tr>
+                <th colspan="7">Return</th>
+            </tr>
+            <th>Airline</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Departure date</th>
+            <th>Departure time</th>
+            <th>Arrival date</th>
+            <th>Arrival time</th>
+            {% for items in returning %}
+            <tr>
+                <td>{{items['airline_name']}}</td>
+                <td>{{items['src_name']}}</td>
+                <td>{{items['dst_name']}}</td>
+                <td>{{items['departure_date']}}</td>
+                <td>{{items['departure_time']}}</td>
+                <td>{{items['arrival_date']}}</td>
+                <td>{{items['arrival_time']}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    {% endif %}
+    <br><a href="/public_info">Go back</a></br>
+    <br><a href="/">Main menu</a>
+</body>
+</html>

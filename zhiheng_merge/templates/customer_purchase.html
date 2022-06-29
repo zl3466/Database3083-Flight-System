@@ -29,38 +29,38 @@
             <input type="text" name="sold_price" value="{{bill[4]}}" hidden>
         {% endif %}
 	{% if bill %}
-    <br>
-    <table>
-        <th>Item</th>
-        <th>Cost</th>
-        <tr>
-            <td>Original capacity</td>
-            <td>{{bill[0]}}</td>
-        </tr>
-        <tr>
-            <td>Current capacity</td>
-            <td>{{bill[1]}}%</td>
-        </tr>
+        <br>
+        <table>
+            <th>Item</th>
+            <th>Cost</th>
+            <tr>
+                <td>Original capacity</td>
+                <td>{{bill[0]}}</td>
+            </tr>
+            <tr>
+                <td>Current capacity</td>
+                <td>{{bill[1]}}%</td>
+            </tr>
 
-        <tr>
-            <td>Multiplier</td>
-            <td>{{bill[2]}}</td>
-        </tr>
-        <tr>
-            <td>Base price</td>
-            <td>{{bill[3]}}</td>
-        </tr>
-        <tr>
-            <td>Final price</td>
-            <td>{{bill[4]}}</td>
-        </tr>
-    </table>
-    <br>
-        <input type="submit" value = Purchase />
-    </form>
+            <tr>
+                <td>Multiplier</td>
+                <td>{{bill[2]}}</td>
+            </tr>
+            <tr>
+                <td>Base price</td>
+                <td>{{bill[3]}}</td>
+            </tr>
+            <tr>
+                <td>Final price</td>
+                <td>{{bill[4]}}</td>
+            </tr>
+        </table>
+        <br>
+            <input type="submit" value = Purchase />
+        </form>
 	{% endif %}
 	{% if error %}
-    <p class="error"><strong>Error:</strong> {{error}}</p>
+        <p class="error"><strong>Error:</strong> {{error}}</p>
 	{% endif %}
     <br>
     <a href="/customer_oneway"><button>Go back</button></a>
