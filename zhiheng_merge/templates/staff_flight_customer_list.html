@@ -20,18 +20,18 @@
     <p>Departure date: {{departure_date}}</p>
     <p>Departure time: {{departure_time}}</p>
     {% if data %}
-    <table>
-        <th>Name</th>
-        <th>Email</th>
-        {% for line in data %}
-        <tr>
-            <td>{{line['name']}}</td>
-            <td>{{line['email']}}</td>
-        </tr>
-        {% endfor %}
-    </table>
+        <table>
+            <th>Name</th>
+            <th>Email</th>
+            {% for line in data %}
+                <tr>
+                    <td>{{line['name']}}</td>
+                    <td>{{line['email']}}</td>
+                </tr>
+            {% endfor %}
+        </table>
     {% else %}
-    <h4>No customers for this flight</h4>
+        <h4>No customers for this flight</h4>
     {% endif %}
     <br>
     <a href="/staff_home"><button>Home</button></a>

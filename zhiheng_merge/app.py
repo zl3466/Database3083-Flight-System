@@ -979,7 +979,7 @@ def flight_view_customer():
     cursor.execute(query, (airline_name, flight_number, departure_date, departure_time))
     data = cursor.fetchall()
     cursor.close()
-    return render_template('flight_customer_list.html', data=data, flight_number=flight_number,
+    return render_template('staff_flight_customer_list.html', data=data, flight_number=flight_number,
                            departure_date=departure_date, departure_time=departure_time)
 
 
