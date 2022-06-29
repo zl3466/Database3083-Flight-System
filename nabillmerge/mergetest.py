@@ -1,11 +1,11 @@
 from crypt import methods
-from email.mime import base
 from os import times
-from sqlite3 import connect
 from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors, hashlib
 from datetime import timedelta
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 
 app = Flask(__name__)
 app.secret_key = '12345'
@@ -19,14 +19,12 @@ connection = pymysql.connect(host = 'localhost',
                              cursorclass = pymysql.cursors.DictCursor)
 
 # ---------------------------------MAIN-------------------------------------------
-
 # main route
 @app.route('/')
 def index():
     return render_template('index.html')
 
 # ---------------------------------REGISTER-------------------------------------------
-
 # register route
 @app.route('/register')
 def register():
@@ -186,7 +184,6 @@ def staff_phones_emails():
     return render_template('index.html')
 
 # ---------------------------------LOGIN-------------------------------------------
-
 # login route
 @app.route('/login')
 def login():
@@ -194,7 +191,7 @@ def login():
 
 # customer login route
 @app.route('/customer_login')
-def cust_login():
+def customer_login():
     return render_template('customer_login.html')
 
 # staff login route
@@ -261,7 +258,6 @@ def staff_loginAuth():
         return render_template('staff_login.html', error = error)
 
 # ---------------------------------PUBLIC-------------------------------------------
-
 # public information route
 @app.route('/public_info')
 def public_info():
@@ -344,12 +340,300 @@ def public_flightSearch():
 # round trip view flights route
 @app.route('/public_view_flightsRT', methods=["GET","POST"])
 def public_view_flightsRT():
-    return render_template('public_view_flights.html', roundtrip = True, available = True)
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_date = valid_timestamp.date()
+    return_timestamp = timestamp + timedelta(days=1)
+    valid_return_date = return_timestamp.date()
+    return render_template('public_view_flights.html', roundtrip = True, available = True, today_date=valid_date, 
+    valid_return_date = valid_return_date)
 
 # round trip search route
 @app.route('/public_flightsearchRT', methods = ['GET','POST'])
 def public_flightSearchRT():
     # valid time/date
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    return_timestamp = timestamp + timedelta(days=1)
+    valid_return_date = return_timestamp.date()
+    init_valid_return_date = return_timestamp.date()
+    # dictionary for search parameters
+    param_dict = {}
+    param_dict['src_name'] = request.form['src_name']
+    param_dict['dst_name'] = request.form['dst_name']
+    date_input = {} 
+    date_input['departure_date'] = request.form['departure_date']
+    date_input['return_date'] = request.form['return_date']
+
+    # dictionary for return parameters
+    return_dict = {}
+    return_dict['src_name'] = param_dict['dst_name']
+    return_dict['dst_name'] = param_dict['src_name']
+
+    query_out = "SELECT * FROM flight "
+    query_re = "SELECT * FROM flight "
+    # list of search parameter keys
+    param_keys = []
+    # list of search parameter values
+    param_values = []
+    # list of return parameter keys
+    return_keys = []
+    # list of return parameter values
+    return_values = []
+    predicate_start = ""
+    predicate_end = ""
+    predicate_start_re = ""
+    predicate_end_re = ""
+    dateinsearch = True
+    returninsearch = True
+
+    if len(date_input['departure_date'])<1:
+        predicate_start = "WHERE ((departure_date>%s) OR (departure_date=%s AND departure_time>%s))"
+        param_values.extend([valid_date, valid_date, valid_time])
+        dateinsearch  = False
+    else:
+        if date_input['departure_date'] == valid_date:
+            predicate_start = "WHERE (departure_date = %s AND departure_time>%s)"
+            param_values.extend([valid_date, valid_time])
+            dateinsearch = False
+
+    if dateinsearch:
+        param_dict['departure_date'] = date_input['departure_date']
+
+    for items in param_dict:
+        if len(param_dict[items])>1:
+            param_keys.append(items)
+
+    if dateinsearch:
+        predicate_start = " WHERE {} = %s".format(param_keys[0])
+        param_values.append(param_dict[param_keys[0]])
+
+    if len(param_keys)>0:
+        for items in param_keys:
+            predicate_end += " AND {} = %s".format(items)
+            param_values.append(param_dict[items])
+
+    for items in return_dict:
+        if len(return_dict[items])>1:
+            return_keys.append(items)
+
+    if len(date_input['return_date'])<1:
+        returninsearch  = False
+    else:
+        if date_input['return_date'] == valid_return_date:
+            returninsearch = False
+
+    if returninsearch:
+        predicate_start_re = "WHERE departure_date = %s"
+        return_values.append(date_input['return_date'])
+        return
+    else:
+        if dateinsearch:
+            valid_rd_object = datetime.strptime(date_input['departure_date'], '%Y-%m-%d')
+            valid_return_date =  valid_rd_object + timedelta(days=1)
+        else:
+            pass
+        return_values.append(valid_return_date)
+        predicate_start_re = "WHERE departure_date >= %s"
+    
+    if len(return_keys)>0:
+        for items in return_keys:
+            predicate_end_re += " AND {} = %s".format(items)
+            return_values.append(return_dict[items])
+            
+    search_out = query_out + predicate_start + predicate_end
+    search_re = query_re + predicate_start_re + predicate_end_re
+
+    param_tuple = tuple(param_values)
+    return_tuple = tuple(return_values)
+    cursor = connection.cursor()
+    cursor.execute(search_out, param_tuple)
+    outgoing = cursor.fetchall()
+    cursor.close()
+    cursor = connection.cursor()
+    cursor.execute(search_re, return_tuple)
+    returning = cursor.fetchall()
+    cursor.close()
+
+    available = True
+    if len(outgoing)<1 or len(returning)<1:
+        available = False
+
+    return render_template('public_view_flights.html', data = outgoing, returning = returning, 
+        today_date = valid_date, roundtrip = True, valid_return_date = init_valid_return_date,
+        available = available)
+
+@app.route('/public_view_status')
+def public_view_status():
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_date = valid_timestamp.date()
+    return render_template('public_check_status.html', today_date = valid_date)
+
+
+@app.route('/public_check_status', methods=['GET', 'POST'])
+def public_check_status():
+    airline_name = request.form['airline_name']
+    flight_number = request.form['flight_number']
+    departure_date = request.form['departure_date']
+    arrival_date = request.form['arrival_date']
+
+    cursor = connection.cursor()
+    query = 'SELECT * FROM flight WHERE airline_name=%s and flight_number=%s and departure_date=%s and arrival_date=%s'
+    cursor.execute(query, (airline_name, flight_number, departure_date, arrival_date))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('public_check_status.html', data=data)
+
+# ---------------------------------CUSTOMER-------------------------------------------
+# customer homepage route
+@app.route('/customer_home')
+def customer_home():
+    email = session['email']
+    cursor = connection.cursor()
+    query = 'SELECT name FROM customer WHERE email=%s'
+    cursor.execute(query, email)
+    name = cursor.fetchone()['name']
+    return render_template('customer_home.html', name=name)
+
+# ---------------------------------view my flights-------------------------------------------
+@app.route('/my_flight', methods=['GET', 'POST'])
+def my_flight():
+    email = session['email']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_date = valid_timestamp.date()
+    valid_time = valid_timestamp.time()
+    now_time = timestamp.time()
+    now_date = timestamp.date()
+    cursor = connection.cursor()
+    query = 'SELECT DISTINCT * FROM ticket as T, flight as F WHERE T.email=%s AND (T.airline_name,T.flight_number,T.departure_date, \
+        T.departure_time) = (F.airline_name,F.flight_number,F.departure_date, \
+        F.departure_time)'
+    # 'T.airline_name=F.airline_name AND T.flight_number=F.flight_number AND T.departure_date=F.departure_date and T.departure_time=F.departure_time'
+    # future: depart after 2 hours from now()
+    predicate = ' AND (F.departure_date>%s OR (F.departure_date=%s AND F.departure_time>%s))' 
+    cursor.execute(query+predicate, (email, valid_date, valid_date, valid_time))
+    future = cursor.fetchall()
+    
+    # current: depart at most 2 hours from now() and land after now()
+    predicate = ' AND (F.departure_date<%s OR (F.departure_date=%s AND F.departure_time<=%s))\
+        AND (F.arrival_date>%s or (F.arrival_date=%s AND F.arrival_time>%s))' 
+    cursor.execute(query+predicate, (email, valid_date, valid_date, valid_time, now_date,
+    now_date, now_time))
+    current = cursor.fetchall()
+    
+    # past: landed before now()
+    predicate = ' AND (F.arrival_date<%s OR (F.arrival_date=%s AND F.arrival_time<%s))' 
+    cursor.execute(query+predicate, (email, now_date, now_date, now_time))
+    past = cursor.fetchall()
+    cursor.close()
+    return render_template('customer_my_flights.html', future=future, current=current, past=past)
+
+@app.route('/cancel_flight', methods=['GET', 'POST'])
+def cancel_flight():
+    ticket_id = request.form['ticket_id']
+    cursor = connection.cursor()
+    # query = 'delete from ticket where ticket_id=%s'
+    query = 'update ticket set card_type=%s, card_number=%s, exp_date=%s, purchase_date=%s, purchase_time=%s, email=%s ' \
+            'where ticket_id=%s'
+    cursor.execute(query, (None, None, None, None, None, None, ticket_id))
+    
+    # decreasing ticket_count
+    query = 'SELECT * FROM flight NATURAL JOIN ticket WHERE ticket_id=%s'
+    cursor.execute(query,ticket_id)
+    data = cursor.fetchone()
+    count = data['ticket_count']
+    count -= 1
+    airline_name = data['airline_name']
+    flight_number = data['flight_number']
+    departure_date = data['departure_date']
+    departure_time = data['departure_time']
+    update_ticket_count = 'UPDATE flight SET ticket_count=%s WHERE (airline_name,\
+        flight_number, departure_date,departure_time)=(%s,%s,%s,%s)'
+    cursor.execute(update_ticket_count,(count,airline_name,flight_number,departure_date,departure_time))
+    connection.commit()
+    cursor.close()
+    return redirect(url_for('my_flight'))
+
+# ---------------------------------search flights-------------------------------------------
+@app.route('/customer_oneway')
+def customer_oneway():
+    return render_template('customer_search_flight.html', available=True)
+
+
+@app.route('/customer_rt')
+def customer_rt():
+    return render_template('customer_search_flight.html', roundtrip=True, available=True)
+
+@app.route('/customer_search_flight', methods=['GET', 'POST'])
+def customer_search_flight():
+    # valid time/date
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+
+    # dictionary for search parameters
+    param_dict = {}
+    date_input = {} 
+    date_input['departure_date'] = request.form['departure_date']
+    param_dict['src_name'] = request.form['src_name']
+    param_dict['dst_name'] = request.form['dst_name']
+
+    query = "SELECT * FROM flight "
+    # list of search parameter keys
+    param_keys = []
+    # list of search parameter values
+    param_values = []
+    predicate_start = ""
+    predicate_end = ""
+    dateinsearch = True
+
+    if len(date_input['departure_date'])<1:
+        predicate_start = "WHERE ((departure_date>%s) OR (departure_date=%s AND departure_time>%s))"
+        param_values.extend([valid_date, valid_date, valid_time])
+        dateinsearch  = False
+    else:
+        if date_input['departure_date'] == valid_date:
+            predicate_start = "WHERE (departure_date = %s AND departure_time>%s)"
+            param_values.extend([valid_date, valid_time])
+            dateinsearch = False
+
+    if dateinsearch:
+        param_dict['departure_date'] = date_input['departure_date']
+
+    for items in param_dict:
+        if len(param_dict[items])>1:
+            param_keys.append(items)
+
+    if dateinsearch:
+        predicate_start = " WHERE {} = %s".format(param_keys[0])
+        param_values.append(param_dict[param_keys[0]])
+
+    if len(param_keys)>0:
+        for items in param_keys:
+            predicate_end += " AND {} = %s".format(items)
+            param_values.append(param_dict[items])
+        
+    param_tuple = tuple(param_values)
+    search = query + predicate_start + predicate_end
+    cursor = connection.cursor()
+    cursor.execute(search, param_tuple)
+    data = cursor.fetchall()
+    cursor.close()
+
+    available = True
+
+    if len(data)<1:
+        available = False
+
+    return render_template('customer_search_flight.html', data=data, available = available, today_date=valid_date)
+
+@app.route('/customer_search_flight_rt', methods=['GET', 'POST'])
+def customer_search_flight_rt():
     timestamp = datetime.now()
     valid_timestamp = timestamp + timedelta(hours = 2)
     valid_time = valid_timestamp.time()
@@ -428,7 +712,8 @@ def public_flightSearchRT():
         return
     else:
         if dateinsearch:
-            valid_return_date = date_input['departure_date'] + timedelta(days=1)
+            valid_rd_object = datetime.strptime(date_input['departure_date'], '%Y-%m-%d')
+            valid_return_date =  valid_rd_object + timedelta(days=1)        
         else:
             pass
         return_values.append(valid_return_date)
@@ -457,210 +742,9 @@ def public_flightSearchRT():
     if len(outgoing)<1 or len(returning)<1:
         available = False
 
-    return render_template('public_view_flights.html', data = outgoing, returning = returning, 
+    return render_template('customer_search_flight.html', data = outgoing, returning = returning, 
         today_date = valid_date, roundtrip = True, valid_return_date = valid_return_date,
         available = available)
-
-@app.route('/public_view_status')
-def public_view_status():
-    timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours = 2)
-    valid_date = valid_timestamp.date()
-    return render_template('public_check_status.html', today_date = valid_date)
-
-
-@app.route('/public_check_status', methods=['GET', 'POST'])
-def public_check_status():
-    airline_name = request.form['airline_name']
-    flight_number = request.form['flight_number']
-    departure_date = request.form['departure_date']
-    arrival_date = request.form['arrival_date']
-
-    cursor = connection.cursor()
-    query = 'SELECT * FROM flight WHERE airline_name=%s and flight_number=%s and departure_date=%s and arrival_date=%s'
-    cursor.execute(query, (airline_name, flight_number, departure_date, arrival_date))
-    data = cursor.fetchall()
-    cursor.close()
-    return render_template('public_check_status.html', data=data)
-
-# ---------------------------------CUSTOMER-------------------------------------------
-
-# customer homepage route
-@app.route('/customer_home')
-def customer_home():
-    email = session['email']
-    cursor = connection.cursor()
-    query = 'SELECT name FROM customer WHERE email=%s'
-    cursor.execute(query, email)
-    name = cursor.fetchone()['name']
-    return render_template('customer_home.html', name=name)
-
-# ---------------------------------view my flights-------------------------------------------
-
-@app.route('/my_flight', methods=['GET', 'POST'])
-def my_flight():
-    email = session['email']
-    timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours = 2)
-    valid_date = valid_timestamp.date()
-    valid_time = valid_timestamp.time()
-    now_time = timestamp.time()
-    now_date = timestamp.date()
-    cursor = connection.cursor()
-    query = 'SELECT * FROM ticket as T, flight as F WHERE T.email=%s AND (T.airline_name,T.flight_number,T.departure_date, \
-        T.departure_time) = (F.airline_name,F.flight_number,F.departure_date, \
-        F.departure_time)'
-    # 'T.airline_name=F.airline_name AND T.flight_number=F.flight_number AND T.departure_date=F.departure_date and T.departure_time=F.departure_time'
-    # future: depart after 2 hours from now()
-    predicate = ' AND (F.departure_date>%s OR (F.departure_date=%s AND F.departure_time>%s))' 
-    cursor.execute(query+predicate, (email, valid_date, valid_date, valid_time))
-    future = cursor.fetchall()
-    
-    # current: depart at most 2 hours from now() and land after now()
-    predicate = ' AND (F.departure_date<%s OR (F.departure_date=%s AND F.departure_time<=%s))\
-        AND (F.arrival_date>%s or (F.arrival_date=%s AND F.arrival_time>%s))' 
-    cursor.execute(query+predicate, (email, valid_date, valid_date, valid_time, now_date,
-    now_date, now_time))
-    current = cursor.fetchall()
-    
-    # past: landed before now()
-    predicate = ' AND (F.arrival_date<%s OR (F.arrival_date=%s AND F.arrival_time<%s))' 
-    cursor.execute(query+predicate, (email, now_date, now_date, now_time))
-    past = cursor.fetchall()
-    cursor.close()
-    return render_template('customer_my_flights.html', future=future, current=current, past=past)
-
-# ---------------------------------search flights-------------------------------------------
-@app.route('/customer_oneway')
-def customer_oneway():
-    return render_template('customer_search_flight.html')
-
-
-@app.route('/customer_rt')
-def customer_rt():
-    return render_template('customer_search_flight.html', round_trip=True)
-
-@app.route('/customer_search_flight', methods=['GET', 'POST'])
-def customer_search_flight():
-    # valid time/date
-    timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours = 2)
-    valid_time = valid_timestamp.time()
-    valid_date = valid_timestamp.date()
-
-    # dictionary for search parameters
-    param_dict = {}
-    date_input = {} 
-    date_input['departure_date'] = request.form['departure_date']
-    param_dict['src_name'] = request.form['src_name']
-    param_dict['dst_name'] = request.form['dst_name']
-
-    query = "SELECT * FROM flight "
-    # list of search parameter keys
-    param_keys = []
-    # list of search parameter values
-    param_values = []
-    predicate_start = ""
-    predicate_end = ""
-    dateinsearch = True
-
-    if len(date_input['departure_date'])<1:
-        predicate_start = "WHERE ((departure_date>%s) OR (departure_date=%s AND departure_time>%s))"
-        param_values.extend([valid_date, valid_date, valid_time])
-        dateinsearch  = False
-    else:
-        if date_input['departure_date'] == valid_date:
-            predicate_start = "WHERE (departure_date = %s AND departure_time>%s)"
-            param_values.extend([valid_date, valid_time])
-            dateinsearch = False
-
-    if dateinsearch:
-        param_dict['departure_date'] = date_input['departure_date']
-
-    for items in param_dict:
-        if len(param_dict[items])>1:
-            param_keys.append(items)
-
-    if dateinsearch:
-        predicate_start = " WHERE {} = %s".format(param_keys[0])
-        param_values.append(param_dict[param_keys[0]])
-
-    if len(param_keys)>0:
-        for items in param_keys:
-            predicate_end += " AND {} = %s".format(items)
-            param_values.append(param_dict[items])
-        
-    param_tuple = tuple(param_values)
-    search = query + predicate_start + predicate_end
-    cursor = connection.cursor()
-    cursor.execute(search, param_tuple)
-    data = cursor.fetchall()
-    cursor.close()
-
-    available = True
-
-    if len(data)<1:
-        available = False
-
-    return render_template('customer_search_flight.html', data=data, available = available)
-
-@app.route('/customer_search_flight_rt', methods=['GET', 'POST'])
-def customer_search_flight_rt():
-    # dictionary for search parameters
-    param_dict = {}
-    param_dict['src_name'] = request.form['src_name']
-    param_dict['dst_name'] = request.form['dst_name']
-    param_dict['departure_date'] = request.form['departure_date']
-    # dictionary for return search parameters
-    param_dictRT = {}
-    param_dictRT['dst_name'] = request.form['src_name']
-    param_dictRT['src_name'] = request.form['dst_name']
-    param_dictRT['departure_date'] = request.form['return_date']
-
-    query = "SELECT * FROM flight AS T, flight AS S WHERE T.src_name = S.dst_name\
-                  and T.dst_name = S.src_name"
-    # query2 = "SELECT * FROM flight"
-    search_string = ""
-    # list of search parameter keys
-    param_keys = []
-    # list of search parameter values
-    param_values = []
-    for items in param_dict:
-        if len(param_dict[items]) > 1:
-            param_keys.append(items)
-    if len(param_keys) > 0:
-        search_string = " WHERE {} = %s".format(param_keys[0])
-        param_values.append(param_dict[param_keys[0]])
-    if len(param_keys) > 1:
-        for items in param_keys[1:]:
-            search_string += " and {} = %s".format(items)
-            param_values.append(param_dict[items])
-    param_tuple = tuple(param_values)
-    search = query + search_string
-    cursor = connection.cursor()
-    cursor.execute(search, param_tuple)
-    data = cursor.fetchall()
-    cursor.close()
-    return render_template('customer_search_flight.html', data=data, roundtrip=True)
-
-@app.route('/past_flight', methods=['GET', 'POST'])
-def past_flight():
-    email = session['email']
-    timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours=2)
-    valid_time = valid_timestamp.time()
-    valid_date = valid_timestamp.date()
-
-    cursor = connection.cursor()
-    query = 'select * from ticket where email=%s and ((departure_date<%s) OR (departure_date=%s and departure_time<%s))'
-    cursor.execute(query, (email, valid_date, valid_date, valid_time))
-    if cursor.fetchone() is None:
-        error = 'No Past Flight Record'
-        return render_template('customer_past_flights.html', error=error)
-    else:
-        data = cursor.fetchall()
-        cursor.close()
-        return render_template('customer_past_flights.html', data=data)
 
 # ---------------------------------purchase ticket-------------------------------------------
 # helper function to determine ticket pricing
@@ -726,7 +810,7 @@ def make_purchase():
     cursor.execute(query, (airline_name, flight_number, departure_date, departure_time))
     ticket = cursor.fetchone()['ticket_id']
     error = None
-    if ticket:
+    if ticket is not None:
         # inputting information for available ticket
         update_ticket = 'UPDATE ticket SET email=%s, card_type=%s, card_number=%s, \
             card_name=%s, exp_date=%s, purchase_time=%s, purchase_date=%s, sold_price=%s \
@@ -775,41 +859,15 @@ def make_rate_comment():
     cursor.close()
     return render_template('/make_rate_comment', message=message)
 
-@app.route('/cancel_flight', methods=['GET', 'POST'])
-def cancel_flight():
-    ticket_id = request.form['ticket_id']
-    cursor = connection.cursor()
-    # query = 'delete from ticket where ticket_id=%s'
-    query = 'update ticket set card_type=%s, card_number=%s, exp_date=%s, purchase_date=%s, purchase_time=%s, email=%s ' \
-            'where ticket_id=%s'
-    cursor.execute(query, (None, None, None, None, None, None, ticket_id))
-    
-    # decreasing ticket_count
-    query = 'SELECT * FROM flight NATURAL JOIN ticket WHERE ticket_id=%s'
-    cursor.execute(query,ticket_id)
-    data = cursor.fetchone()
-    count = data['ticket_count']
-    count -= 1
-    airline_name = data['airline_name']
-    flight_number = data['flight_number']
-    departure_date = data['departure_date']
-    departure_time = data['departure_time']
-    update_ticket_count = 'UPDATE flight SET ticket_count=%s WHERE (airline_name,\
-        flight_number, departure_date,departure_time)=(%s,%s,%s,%s)'
-    cursor.execute(update_ticket_count,(count,airline_name,flight_number,departure_date,departure_time))
-    connection.commit()
-    cursor.close()
-    return render_template('customer_my_flights.html')
 
 # ---------------------------------track spending-------------------------------------------
-
 @app.route('/customer_track_spending', methods=['GET', 'POST'])
 def customer_track_spending():
     return render_template('customer_track_spending.html')
 
 
-@app.route('/define_period', methods=['GET', 'POST'])
-def define_period():
+@app.route('/spending_define_period', methods=['GET', 'POST'])
+def spending_define_period():
     period = request.form['period']
     return render_template('customer_track_spending.html', period=period)
 
@@ -998,7 +1056,6 @@ def staff_search_flight():
     
     return render_template('staff_view_flight.html',today_date=valid_date, future=future, available=available, 
                             initial_src=src, initial_dst=dst,airline_name=airline_name)
-
 
 @app.route('/staff_current_flight')
 def staff_current_flight():
@@ -1211,7 +1268,7 @@ def flight_view_customer():
     cursor.execute(query,(airline_name, flight_number, departure_date, departure_time))
     data = cursor.fetchall()
     cursor.close()
-    return render_template('flight_customer_list.html', data = data, flight_number = flight_number,
+    return render_template('staff_flight_customer_list.html', data = data, flight_number = flight_number,
                             departure_date = departure_date, departure_time = departure_time)
 
 # ---------------------------------add plane-------------------------------------------
@@ -1391,7 +1448,7 @@ def sale_define_period():
 def view_record_month():
     airline_name = session['airline_name']
     timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_timestamp = timestamp
     valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
     start_date = valid_date - relativedelta(months=1)
@@ -1412,7 +1469,7 @@ def view_record_month():
 def view_record_year():
     airline_name = session['airline_name']
     timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_timestamp = timestamp
     valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
     start_date = valid_date - relativedelta(years=1)
@@ -1447,6 +1504,53 @@ def view_record_specific():
         return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
     else:
         return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+
+# ---------------------------------view revenue-------------------------------------------
+@app.route('/go_view_revenue', methods=['GET', 'POST'])
+def go_view_revenue():
+    airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    last_month = valid_date - relativedelta(months=1)
+    last_year = valid_date - relativedelta(years=1)
+    cursor = connection.cursor()
+
+    query = 'select sum(sold_price) from ticket where airline_name=%s and email!=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+
+    cursor.execute(query, (airline_name, 'null', last_month, last_month, valid_time))
+    monthly_revenue = cursor.fetchone()
+
+    cursor.execute(query, (airline_name, 'null', last_year, last_year, valid_time))
+    annual_revenue = cursor.fetchone()
+
+    revenue_list = []
+    query2 = 'select sum(sold_price) from ticket where airline_name=%s and email!=%s and ' \
+             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s)) and ' \
+             '((purchase_date<%s) OR (purchase_date=%s and purchase_time<%s))'
+
+    time_zero = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    for i in range(1, 13):
+        the_month_start = (valid_date - relativedelta(months=i)).replace(day=1)
+        the_month_end = (the_month_start + relativedelta(months=1)).replace(day=1)
+
+        cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
+                                the_month_end, the_month_end, time_zero))
+        the_revenue = cursor.fetchone()
+        date_range = str(the_month_start) + ' to ' + str(the_month_end)
+        if the_revenue['sum(sold_price)'] is None:
+            the_revenue = 0
+        else:
+            the_revenue = the_revenue['sum(sold_price)']
+        revenue_list.insert(0, (date_range, the_revenue))
+
+    if len(monthly_revenue) != 0 and len(annual_revenue) != 0:
+        return render_template('staff_view_revenue.html', monthly_revenue=monthly_revenue['sum(sold_price)'],
+                               annual_revenue=annual_revenue['sum(sold_price)'], revenue_list=revenue_list)
+    else:
+        return render_template('staff_view_revenue.html', error='Failed to Collect Data')
 
  # ---------------------------------LOGOUT-------------------------------------------
 @app.route('/customer_logout')

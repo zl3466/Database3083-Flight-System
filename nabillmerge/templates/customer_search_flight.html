@@ -16,9 +16,9 @@
     <a href="/customer_oneway"><button>One way</button></a>
     <a href="/customer_rt"><button>Round trip</button></a>
     <h3>Search upcoming flights</h3>
-    {% if round_trip %}
+    {% if roundtrip %}
         <form action="/customer_search_flight_rt" method="POST">
-    {%else%}
+    {% else %}
         <form action="/customer_search_flight" method="POST">
     {% endif %}
         <label for="src_name">From (airport)</label><br> 
@@ -28,13 +28,17 @@
         <label for="departure_date">Departure date</label><br> 
         <input type="date" name="departure_date" min="{{today_date}}"><br>
         {% if roundtrip %}
-        <label for="return_date" name="return_date" min="{{valid_return_date}}">Departure date (return)</label><br>
-        <input type="date" name="return_date" ><br>
+        <label for="return_date" name="return_date" >Departure date (return)</label><br>
+        <input type="date" name="return_date" min="{{valid_return_date}}"><br>
         {% endif %}
         <br><input type="submit" value = Search><br>
     <br>
     </form>
+    {% if not available %}
+    <h3>No upcoming flights matching search</h3>
+    {% endif %}
     {% if data %}
+    <p>Outbound</p>
         <table>
             <th>Airline</th>
             <th>Flight Number</th>
@@ -69,11 +73,47 @@
         {% endfor %}
         </table>
     {% endif %}
+    {% if returning %}
+    <br><p>Return</p>
+        <table>
+            <th>Airline</th>
+            <th>Flight Number</th>
+            <th>Source Airport</th>
+            <th>Destination Airport</th>
+            <th>Departure Date</th>
+            <th>Departure Time</th>
+            <th>Arrival Date</th>
+            <th>Arrival Time</th>
+            <th>Base Price</th>
+
+        {% for line in returning %}
+        <form action="/purchase" method="POST">
+            <tr>
+                <td>{{line['airline_name']}}</td>
+                <td>{{line['flight_number']}}</td>
+                <td>{{line['src_name']}}</td>
+                <td>{{line['dst_name']}}</td>
+                <td>{{line['departure_date']}}</td>
+                <td>{{line['departure_time']}}</td>
+                <td>{{line['arrival_date']}}</td>
+                <td>{{line['arrival_time']}}</td>
+                <td>{{line['base_price']}}</td>
+                <input type="text" name="airline_name" value="{{line['airline_name']}}" hidden/>
+                <input type="text" name="flight_number" value="{{line['flight_number']}}" hidden/>
+                <input type="text" name="departure_date" value="{{line['departure_date']}}" hidden/>
+                <input type="text" name="departure_time" value="{{line['departure_time']}}" hidden/>
+                <input type="text" name="base_price" value="{{line['base_price']}}" hidden/>
+                <td><input type="submit" value = Purchase /></td>
+            </tr>
+            </form>
+        {% endfor %}
+        </table>
+    {% endif %}
     {% if error %}
     <p class="error"><strong>Error:</strong> {{error}}</p>
     {% endif %}
 
-    <a href="/customer_home">Home</a><br>
-    <a href="/customer_logout">Log out</a>
+    <a href="/customer_home"><button>Home</button></a><br>
+    <a href="/customer_logout"><button>Log out</button></a>
 </body>
 </html>
