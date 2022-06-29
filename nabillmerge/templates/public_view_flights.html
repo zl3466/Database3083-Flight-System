@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <title>View flights</title>
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
 </head>
 <body>
     <a href="/public_view_flights"><button>One way</button></a>
@@ -21,10 +25,10 @@
         <label for="dst_name">To (airport)</label><br> 
         <input type="text" name="dst_name"><br>
         <label for="departure_date">Departure date</label><br> 
-        <input type="date" name="departure_date" min="{{today_date}}""><br>
+        <input type="date" name="departure_date" min="{{today_date}}"><br>
         {% if roundtrip %}
-        <label for="return_date" name="return_date" min="{{valid_return_date}}">Departure date (return)</label><br>
-        <input type="date" name="return_date" ><br>
+        <label for="return_date" name="return_date">Departure date (return)</label><br>
+        <input type="date" name="return_date"  min="{{valid_return_date}}"><br>
         {% endif %}
         <br><input type="submit" value = Search><br>
     </form>

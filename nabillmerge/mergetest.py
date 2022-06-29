@@ -340,7 +340,13 @@ def public_flightSearch():
 # round trip view flights route
 @app.route('/public_view_flightsRT', methods=["GET","POST"])
 def public_view_flightsRT():
-    return render_template('public_view_flights.html', roundtrip = True, available = True)
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_date = valid_timestamp.date()
+    return_timestamp = timestamp + timedelta(days=1)
+    valid_return_date = return_timestamp.date()
+    return render_template('public_view_flights.html', roundtrip = True, available = True, today_date=valid_date, 
+    valid_return_date = valid_return_date)
 
 # round trip search route
 @app.route('/public_flightsearchRT', methods = ['GET','POST'])
@@ -352,6 +358,7 @@ def public_flightSearchRT():
     valid_date = valid_timestamp.date()
     return_timestamp = timestamp + timedelta(days=1)
     valid_return_date = return_timestamp.date()
+    init_valid_return_date = return_timestamp.date()
     # dictionary for search parameters
     param_dict = {}
     param_dict['src_name'] = request.form['src_name']
@@ -424,7 +431,8 @@ def public_flightSearchRT():
         return
     else:
         if dateinsearch:
-            valid_return_date = date_input['departure_date'] + timedelta(days=1)
+            valid_rd_object = datetime.strptime(date_input['departure_date'], '%Y-%m-%d')
+            valid_return_date =  valid_rd_object + timedelta(days=1)
         else:
             pass
         return_values.append(valid_return_date)
@@ -454,7 +462,7 @@ def public_flightSearchRT():
         available = False
 
     return render_template('public_view_flights.html', data = outgoing, returning = returning, 
-        today_date = valid_date, roundtrip = True, valid_return_date = valid_return_date,
+        today_date = valid_date, roundtrip = True, valid_return_date = init_valid_return_date,
         available = available)
 
 @app.route('/public_view_status')
@@ -553,12 +561,12 @@ def cancel_flight():
 # ---------------------------------search flights-------------------------------------------
 @app.route('/customer_oneway')
 def customer_oneway():
-    return render_template('customer_search_flight.html')
+    return render_template('customer_search_flight.html', available=True)
 
 
 @app.route('/customer_rt')
 def customer_rt():
-    return render_template('customer_search_flight.html', round_trip=True)
+    return render_template('customer_search_flight.html', roundtrip=True, available=True)
 
 @app.route('/customer_search_flight', methods=['GET', 'POST'])
 def customer_search_flight():
@@ -622,47 +630,121 @@ def customer_search_flight():
     if len(data)<1:
         available = False
 
-    return render_template('customer_search_flight.html', data=data, available = available)
+    return render_template('customer_search_flight.html', data=data, available = available, today_date=valid_date)
 
 @app.route('/customer_search_flight_rt', methods=['GET', 'POST'])
 def customer_search_flight_rt():
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours = 2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    return_timestamp = timestamp + timedelta(days=1)
+    valid_return_date = return_timestamp.date()
     # dictionary for search parameters
     param_dict = {}
     param_dict['src_name'] = request.form['src_name']
     param_dict['dst_name'] = request.form['dst_name']
-    param_dict['departure_date'] = request.form['departure_date']
-    # dictionary for return search parameters
-    param_dictRT = {}
-    param_dictRT['dst_name'] = request.form['src_name']
-    param_dictRT['src_name'] = request.form['dst_name']
-    param_dictRT['departure_date'] = request.form['return_date']
+    date_input = {} 
+    date_input['departure_date'] = request.form['departure_date']
+    date_input['return_date'] = request.form['return_date']
 
-    query = "SELECT * FROM flight AS T, flight AS S WHERE T.src_name = S.dst_name\
-                  and T.dst_name = S.src_name"
-    # query2 = "SELECT * FROM flight"
-    search_string = ""
+    # dictionary for return parameters
+    return_dict = {}
+    return_dict['src_name'] = param_dict['dst_name']
+    return_dict['dst_name'] = param_dict['src_name']
+
+    query_out = "SELECT * FROM flight "
+    query_re = "SELECT * FROM flight "
     # list of search parameter keys
     param_keys = []
     # list of search parameter values
     param_values = []
-    for items in param_dict:
-        if len(param_dict[items]) > 1:
-            param_keys.append(items)
-    if len(param_keys) > 0:
-        search_string = " WHERE {} = %s".format(param_keys[0])
-        param_values.append(param_dict[param_keys[0]])
-    if len(param_keys) > 1:
-        for items in param_keys[1:]:
-            search_string += " and {} = %s".format(items)
-            param_values.append(param_dict[items])
-    param_tuple = tuple(param_values)
-    search = query + search_string
-    cursor = connection.cursor()
-    cursor.execute(search, param_tuple)
-    data = cursor.fetchall()
-    cursor.close()
-    return render_template('customer_search_flight.html', data=data, roundtrip=True)
+    # list of return parameter keys
+    return_keys = []
+    # list of return parameter values
+    return_values = []
+    predicate_start = ""
+    predicate_end = ""
+    predicate_start_re = ""
+    predicate_end_re = ""
+    dateinsearch = True
+    returninsearch = True
 
+    if len(date_input['departure_date'])<1:
+        predicate_start = "WHERE ((departure_date>%s) OR (departure_date=%s AND departure_time>%s))"
+        param_values.extend([valid_date, valid_date, valid_time])
+        dateinsearch  = False
+    else:
+        if date_input['departure_date'] == valid_date:
+            predicate_start = "WHERE (departure_date = %s AND departure_time>%s)"
+            param_values.extend([valid_date, valid_time])
+            dateinsearch = False
+
+    if dateinsearch:
+        param_dict['departure_date'] = date_input['departure_date']
+
+    for items in param_dict:
+        if len(param_dict[items])>1:
+            param_keys.append(items)
+
+    if dateinsearch:
+        predicate_start = " WHERE {} = %s".format(param_keys[0])
+        param_values.append(param_dict[param_keys[0]])
+
+    if len(param_keys)>0:
+        for items in param_keys:
+            predicate_end += " AND {} = %s".format(items)
+            param_values.append(param_dict[items])
+
+    for items in return_dict:
+        if len(return_dict[items])>1:
+            return_keys.append(items)
+
+    if len(date_input['return_date'])<1:
+        returninsearch  = False
+    else:
+        if date_input['return_date'] == valid_return_date:
+            returninsearch = False
+
+    if returninsearch:
+        predicate_start_re = "WHERE departure_date = %s"
+        return_values.append(date_input['return_date'])
+        return
+    else:
+        if dateinsearch:
+            valid_rd_object = datetime.strptime(date_input['departure_date'], '%Y-%m-%d')
+            valid_return_date =  valid_rd_object + timedelta(days=1)        
+        else:
+            pass
+        return_values.append(valid_return_date)
+        predicate_start_re = "WHERE departure_date >= %s"
+    
+    if len(return_keys)>0:
+        for items in return_keys:
+            predicate_end_re += " AND {} = %s".format(items)
+            return_values.append(return_dict[items])
+            
+    search_out = query_out + predicate_start + predicate_end
+    search_re = query_re + predicate_start_re + predicate_end_re
+
+    param_tuple = tuple(param_values)
+    return_tuple = tuple(return_values)
+    cursor = connection.cursor()
+    cursor.execute(search_out, param_tuple)
+    outgoing = cursor.fetchall()
+    cursor.close()
+    cursor = connection.cursor()
+    cursor.execute(search_re, return_tuple)
+    returning = cursor.fetchall()
+    cursor.close()
+
+    available = True
+    if len(outgoing)<1 or len(returning)<1:
+        available = False
+
+    return render_template('customer_search_flight.html', data = outgoing, returning = returning, 
+        today_date = valid_date, roundtrip = True, valid_return_date = valid_return_date,
+        available = available)
 
 # ---------------------------------purchase ticket-------------------------------------------
 # helper function to determine ticket pricing
