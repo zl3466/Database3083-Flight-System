@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+
+    {% if error %}
+        <h2>{{ error }}</h2>
+    {% elif record %}
+        <h2>Customer [{{ email }}]'s Purchase Records</h2>
+        <table>
+            <th>Purchase Date</th>
+            <th>Flight Number</th>
+            <th>Departure Date</th>
+            <th>Departure Time</th>
+            <th>Rating</th>
+
+            {% for ticket in record %}
+            <tr>
+                <td>{{ticket['purchase_date']}}</td>
+                <td>{{ticket['flight_number']}}</td>
+                <td>{{ticket['departure_date']}}</td>
+                <td>{{ticket['departure_time']}}</td>
+                <td>{{ticket['rating']}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    <a href="/go_frequent_customers"><button>Go back</button></a>
+</body>
+</html>

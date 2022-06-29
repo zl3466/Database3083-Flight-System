@@ -1138,7 +1138,10 @@ def go_frequent_customers():
             'group by email order by count(ticket_id) DESC'
     cursor.execute(query, ('null', airline_name))
     customers = cursor.fetchall()
-    return render_template('staff_view_frequent_customers.html', customers=customers)
+    error = None
+    if not customers:
+        error = 'No Customers On File'
+    return render_template('staff_view_frequent_customers.html', customers=customers, error=error)
 
 
 @app.route('/view_customer_records', methods=['GET', 'POST'])
