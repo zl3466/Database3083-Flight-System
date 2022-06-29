@@ -816,7 +816,7 @@ def sale_define_period():
 
 
 @app.route('/view_report_month', methods=['GET', 'POST'])
-def view_record_month():
+def view_report_month():
     airline_name = session['airline_name']
     timestamp = datetime.now()
     valid_timestamp = timestamp + timedelta(hours=2)
@@ -857,7 +857,7 @@ def view_record_month():
 
 
 @app.route('/view_report_year', methods=['GET', 'POST'])
-def view_record_year():
+def view_report_year():
     airline_name = session['airline_name']
     timestamp = datetime.now()
     valid_timestamp = timestamp + timedelta(hours=2)
@@ -899,7 +899,7 @@ def view_record_year():
 
 
 @app.route('/view_report_specific', methods=['GET', 'POST'])
-def view_record_specific():
+def view_report_specific():
     airline_name = session['airline_name']
     start_date = request.form['start_date']
     end_date = request.form['end_date']
