@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h2>Total Tickets Sold</h2>
+    {% if not period and not data and not error%}
+        <form action="/sale_define_period" method="POST">
+            <input type="text" name="period" list="period_choice">
+            <datalist id="period_choice">
+                <option value="specific period"></option>
+                <option value="past month"></option>
+                <option value="past year"></option>
+            </datalist>
+            <input type="submit" value = "Confirm Range" /> </br>
+        </form>
+    {% endif %}
+
+    {% if period %}
+        {% if period=="specific period" %}
+            <h4>Please Enter Your Desired Period</h4>
+            <form action="/view_report_specific" method="POST">
+            <label for="start_date"> Start Date </label> </br>
+            <input type="date" name = "start_date" /> </br>
+            <label for="end_date"> End Date </label> </br>
+            <input type="date" name = "end_date" /> </br>
+            <input type="submit" value = "View Report" /> </br>
+            </form>
+        {% elif period=='past month' %}
+            <h4>Past Month Record Selected</h4>
+            <form action="/view_report_month" method="POST">
+            <input type="submit" value = "View Report" /> </br>
+            </form>
+        {% else %}
+            <h4>Past Year Record Selected</h4>
+            <form action="/view_report_year">
+            <input type="submit" value = "View Report" /> </br>
+            </form>
+        {% endif %}
+    {% endif %}
+
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+
+    <p>
+    {% if data %}
+        <table>
+            <th>Total sold</th>
+            <tr>
+                <td>{{data}}</td>
+            </tr>
+        </table>
+    {% elif error %}
+        <h3>{{ error }}</h3>
+    {% endif %}
+    </p>
+
+    <a href="/go_view_reports"><button>Select Another Period</button></a> </br>
+    <a href="/staff_home"><button>Go back</button></a>
+</body>
+</html>

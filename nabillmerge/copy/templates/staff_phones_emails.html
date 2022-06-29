@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=, initial-scale=1.0">
+    <title>Phones & emails</title>
+</head>
+<body>
+    <form action="/staff_phones_emails" method = 'POST'>
+        {% for phone in phones %}
+        <br><label for="{{phone}}">Phone number {{phone}}</label>
+        <br><input type="number" name ="{{phone}}" placeholder="123456789" required><br>
+        {% endfor %}
+        {% for email in emails %}
+        <br><label for="{{email}}">{{email}}</label>
+        <br><input type="email" name ="{{email}}" placeholder="mail@example.com" required><br>
+        {% endfor %}
+        <br><input type="submit" value="Submit">
+    </form>
+</body>
+</html>

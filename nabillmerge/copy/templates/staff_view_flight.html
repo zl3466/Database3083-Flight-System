@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upcoming flights (Staff)</title>
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ airline_name }}</h1>
+    <a href="/staff_current_flight"><button>Ongoing flights</button></a>
+    <a href="/staff_past_flight"><button>Past flights</button></a>
+    <h3>Staff View Upcoming Flights</h3>
+        <form action="/staff_search_flight" method="POST">
+            <p>
+            <label for="start_date"> Start Date </label> </br>
+            <input type="date" name = "start_date" min="{{today_date}}"/> </br>
+            <label for="end_date"> End Date </label> </br>
+            <input type="date" name = "end_date" min="{{today_date}}"/> </br>
+            <label for="src_name">From (airport)</label><br> 
+            <input type="text" name="src_name" value="{{initial_src}}"><br>
+            <label for="dst_name">To (airport)</label><br> 
+            <input type="text" name="dst_name" value="{{initial_dst}}"><br>
+            <input type="submit" value = Show />
+            </p>
+        </form>
+        {% if not available %}
+        <h3>No flights matching query</h3>
+        {% endif %}
+        {% if future %}
+        <h4>Upcoming flights
+            {% if default_range %}
+            {{default_range}}
+            {% endif %}
+        </h4>
+        <table>
+        <th>Flight Number</th>
+        <th>Plane ID</th>
+        <th>Departure date</th>
+        <th>Departure time</th>
+        <th>Arrival date</th>
+        <th>Arrival time</th>
+        <th>Status</th>
+        <th>Change Status</th>
+
+        {% for line in future %}
+        <tr>
+            <td>{{line['flight_number']}}</td>
+            <td>{{line['plane_id']}}</td>
+            <td>{{line['departure_date']}}</td>
+            <td>{{line['departure_time']}}</td>
+            <td>{{line['arrival_date']}}</td>
+            <td>{{line['arrival_time']}}</td>
+            <td>{{line['status']}}</td>
+            <form action="/change_status" method="POST">
+                <input type="text" name="flight_number" value="{{line['flight_number']}}" hidden/>
+                <input type="text" name="departure_date" value="{{line['departure_date']}}" hidden/>
+                <input type="text" name="departure_time" value="{{line['departure_time']}}" hidden/>
+                <td><input type="text" name="status" list="status_choice">
+                    <datalist id="status_choice" >
+                    <option value="on time"></option>
+                    <option value="delayed"></option>
+                    </datalist>
+                    <input type="submit" value = Confirm />
+                </td>
+            </form>
+            <form action="/flight_view_customers" method="POST">
+                <input type="text" name="flight_number" value="{{line['flight_number']}}" hidden/>
+                <input type="text" name="departure_date" value="{{line['departure_date']}}" hidden/>
+                <input type="text" name="departure_time" value="{{line['departure_time']}}" hidden/>
+                <td>
+                    <input type="submit" value = "Customer list">
+                </td>
+            </form>
+            </tr>
+        {% endfor %}
+        </table>
+        <br>
+    {% endif %}
+    <a href="/staff_home"><button>Home</button></a>
+</body>
+</html>

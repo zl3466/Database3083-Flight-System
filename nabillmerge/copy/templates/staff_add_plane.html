@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% if not message %}
+        <h3>Please Enter Plane Information</h3>
+        <form action="/add_plane" method="POST">
+            <p>
+            <label for="plane_id"> Plane ID </label> </br>
+            <input type="text" name = "plane_id" /> </br>
+            <label for="seat_num"> Number of Seats </label> </br>
+            <input type="number" name = "seat_num" /> </br>
+            <label for="manufacturer"> Manufacturer </label> </br>
+            <input type="text" name = "manufacturer" /> </br>
+            <label for="age"> Age </label> </br>
+            <input type="text" name = "age" /> </br>
+            <input type="submit" value = 'Add Plane' />
+            </p>
+        </form>
+    {% else %}
+        <h3>{{ message }}</h3>
+        <a href="/go_add_plane"><button>Add Another Plane</button></a> </br>
+    {% endif %}
+    <a href="/staff_home"><button>Go Back to Home</button></a>
+</body>
+</html>

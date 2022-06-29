@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    {% if not future %}
+    <h5>No upcoming flights</h5>
+    {% endif %}
+    {% if future %}
+    <h3>Upcoming flights</h3>
+    <table>
+        <th>Airline Name</th>
+        <th>Flight Number</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Ticket ID</th>
+
+    {% for line in future %}
+        <form action="/cancel_flight" method="POST">
+        <tr>
+            <td>{{line['F.airline_name']}}</td>
+            <td>{{line['F.flight_number']}}</td>
+            <td>{{line['src_name']}}</td>
+            <td>{{line['dst_name']}}</td>
+            <td>{{line['F.departure_date']}}</td>
+            <td>{{line['F.departure_time']}}</td>
+            <td>{{line['arrival_date']}}</td>
+            <td>{{line['arrival_time']}}</td>
+            <td>{{line['ticket_id']}}</td>
+            <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
+            <td><input type="submit" value = Cancel /></td>
+        </tr>
+        </form>
+    {% endfor %}
+    </table>
+    {% endif %}
+    {% if not current %}
+    <h5>No ongoing flights</h5>
+    {% endif %}
+    {%if current %}
+    <h3>Current flights</h3>
+    <table>
+        <th>Airline Name</th>
+        <th>Flight Number</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Ticket ID</th>
+
+    {% for line in current %}
+        <form action="/cancel_flight" method="POST">
+        <tr>
+            <td>{{line['F.airline_name']}}</td>
+            <td>{{line['F.flight_number']}}</td>
+            <td>{{line['src_name']}}</td>
+            <td>{{line['dst_name']}}</td>
+            <td>{{line['F.departure_date']}}</td>
+            <td>{{line['F.departure_time']}}</td>
+            <td>{{line['arrival_date']}}</td>
+            <td>{{line['arrival_time']}}</td>
+            <td>{{line['ticket_id']}}</td>
+            <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
+            <td><input type="submit" value = Cancel /></td>
+        </tr>
+        </form>
+    {% endfor %}
+    </table>
+    {% endif %}
+    {% if not past %}
+    <h5>No past flights</h5>
+    {% endif %}
+    {%if past %}
+    <h3>Past flights</h3>
+    <table>
+        <th>Airline Name</th>
+        <th>Flight Number</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Ticket ID</th>
+
+    {% for line in past %}
+        <form action="/cancel_flight" method="POST">
+        <tr>
+            <td>{{line['F.airline_name']}}</td>
+            <td>{{line['F.flight_number']}}</td>
+            <td>{{line['src_name']}}</td>
+            <td>{{line['dst_name']}}</td>
+            <td>{{line['F.departure_date']}}</td>
+            <td>{{line['F.departure_time']}}</td>
+            <td>{{line['arrival_date']}}</td>
+            <td>{{line['arrival_time']}}</td>
+            <td>{{line['ticket_id']}}</td>
+            <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
+            <td><input type="submit" value = Cancel /></td>
+        </tr>
+        </form>
+    {% endfor %}
+    </table>
+    {% endif %}
+    <br>
+    <br><a href="/customer_home"><button>Home</button></a>
+    <br><a href="/customer_logout"><button>Log Out</button></a>
+</body>
+</html>
