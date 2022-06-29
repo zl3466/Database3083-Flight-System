@@ -1165,65 +1165,18 @@ def sale_define_period():
 
 
 @app.route('/view_report_month', methods=['GET', 'POST'])
-def view_record_month():
-    airline_name = session['airline_name']
-    timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours=2)
-    valid_time = valid_timestamp.time()
-    valid_date = valid_timestamp.date()
-    start_date = valid_date - relativedelta(months=1)
-    cursor = connection.cursor()
-
-    query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
-            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
-    cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
-    data = cursor.fetchone()
-    cursor.close()
-    if data['count(ticket_id)']:
-        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
-    else:
-        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+def view_report_month():
+    return view_report(session, connection, 'month')
 
 
 @app.route('/view_report_year', methods=['GET', 'POST'])
-def view_record_year():
-    airline_name = session['airline_name']
-    timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours=2)
-    valid_time = valid_timestamp.time()
-    valid_date = valid_timestamp.date()
-    start_date = valid_date - relativedelta(years=1)
-    cursor = connection.cursor()
-
-    query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
-            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
-    cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
-    data = cursor.fetchone()
-    cursor.close()
-
-    if data['count(ticket_id)']:
-        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
-    else:
-        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+def view_report_year():
+    return view_report(session, connection, 'year')
 
 
 @app.route('/view_report_specific', methods=['GET', 'POST'])
-def view_record_specific():
-    airline_name = session['airline_name']
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
-    cursor = connection.cursor()
-
-    query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
-            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
-    cursor.execute(query, (airline_name, 'null', end_date, start_date, start_date))
-    data = cursor.fetchone()
-    cursor.close()
-
-    if data['count(ticket_id)']:
-        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
-    else:
-        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
+def view_report_specific():
+    return view_report(session, connection, 'specific')
 
 
 # ---------------------------------LOGOUT-------------------------------------------
@@ -1418,6 +1371,58 @@ def flight_search_rt(page):
     return render_template(page, data=outgoing, returning=returning,
                            today_date=valid_date, roundtrip=True, valid_return_date=valid_return_date,
                            available=available)
+
+
+def view_report(session, conn, period):
+    airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    if period == 'specific':
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        query = 'select count(ticket_id) from ticket where airline_name=%s and email!=%s and ' \
+                'purchase_date>%s and purchase_date<%s'
+        cursor = conn.cursor()
+        cursor.execute(query, (airline_name, 'null', start_date, end_date))
+    else:
+        if period == 'month':
+            start_date = valid_date - relativedelta(months=1)
+        elif period == 'year':
+            start_date = valid_date - relativedelta(years=1)
+
+        cursor = conn.cursor()
+        query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
+                '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+        cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
+
+    data = cursor.fetchone()
+
+    sales_list = []
+    query2 = 'select count(ticket_id) from ticket where airline_name=%s and email!=%s and ' \
+             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s)) and ' \
+             '((purchase_date<%s) OR (purchase_date=%s and purchase_time<%s))'
+    time_zero = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    for i in range(1, 13):
+        the_month_start = (valid_date - relativedelta(months=i)).replace(day=1)
+        the_month_end = (the_month_start + relativedelta(months=1)).replace(day=1)
+
+        cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
+                                the_month_end, the_month_end, time_zero))
+        the_count = cursor.fetchone()
+        date_range = str(the_month_start) + ' to ' + str(the_month_end)
+        if the_count['count(ticket_id)'] is None:
+            the_count = 0
+        else:
+            the_count = the_count['count(ticket_id)']
+        sales_list.insert(0, (date_range, the_count))
+
+    cursor.close()
+    if data['count(ticket_id)']:
+        return render_template('staff_view_reports.html', data=data['count(ticket_id)'], sales_list=sales_list)
+    else:
+        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period', sales_list=sales_list)
 
 
 if __name__ == "__main__":
