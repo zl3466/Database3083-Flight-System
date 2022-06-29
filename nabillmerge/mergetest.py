@@ -632,6 +632,7 @@ def customer_search_flight():
 
     return render_template('customer_search_flight.html', data=data, available = available, today_date=valid_date)
 
+
 @app.route('/customer_search_flight_rt', methods=['GET', 'POST'])
 def customer_search_flight_rt():
     timestamp = datetime.now()
@@ -770,6 +771,7 @@ def ticket_pricing(airline_name,  flight_number, departure_date, departure_time,
 
     return [seats, current_capacity*100, multiplier, base_price, sold_price]
 
+
 # unfinished purchase()
 @app.route('/purchase', methods=['GET', 'POST'])
 def purchase():
@@ -783,6 +785,7 @@ def purchase():
     bill = ticket_pricing(airline_name, flight_number, departure_date, departure_time, base_price)
 
     return render_template('customer_purchase.html', data=data, bill = bill)
+
 
 @app.route('/make_purchase', methods=['GET', 'POST'])
 def make_purchase():
@@ -933,6 +936,7 @@ def check_spending_specific():
     else:
         return render_template('customer_track_spending.html', error='No Purchase Record')
 
+
 # ---------------------------------STAFF-------------------------------------------
 @app.route('/staff_home', methods=['GET', 'POST'])
 def staff_home():
@@ -944,6 +948,7 @@ def staff_home():
     first_name = data['first_name']
     airline_name = data['airline_name'] 
     return render_template('staff_home.html', first_name=first_name, airline_name=airline_name)
+
 
 @app.route('/staff_view_flight', methods=['GET', 'POST'])
 def staff_view_flight():
@@ -967,6 +972,7 @@ def staff_view_flight():
 
     return render_template('staff_view_flight.html', future=future, today_date=valid_date, available=True, 
                             default_range = default, airline_name=airline_name)
+
 
 # route for searching future flights
 # future flights -- flights that depart within given range (minimum 2 hours from now())
@@ -1057,6 +1063,7 @@ def staff_search_flight():
     return render_template('staff_view_flight.html',today_date=valid_date, future=future, available=available, 
                             initial_src=src, initial_dst=dst,airline_name=airline_name)
 
+
 @app.route('/staff_current_flight')
 def staff_current_flight():
     airline_name = session['airline_name']
@@ -1075,6 +1082,7 @@ def staff_current_flight():
     cursor.execute(query, (valid_date, valid_date, valid_time, airline_name, valid_date, valid_date, now_time))
     current = cursor.fetchall()
     return render_template('staff_current_flight.html', current = current, available =True, airline_name=airline_name)
+
 
 @app.route('/staff_search_current', methods=['GET','POST'])
 def staff_search_current():
@@ -1126,13 +1134,13 @@ def staff_search_current():
     return render_template('staff_current_flight.html', current = current, initial_src=src,initial_dst=dst, 
                             available=available, airline_name=airline_name)
 
+
 # route for past flights
 # default shows all
 @app.route('/staff_past_flight')
 def staff_past_flight():
     airline_name = session['airline_name']
     timestamp = datetime.now()
-    valid_timestamp = timestamp + timedelta(hours=2)
     now_time = timestamp.time()
     now_date = timestamp.date()
 
@@ -1146,6 +1154,7 @@ def staff_past_flight():
 
     cursor.close()
     return render_template('staff_past_flight.html', past = past, today_date=now_date,airline_name=airline_name)
+
 
 # route for searching past flights
 # for given range(start_date,end_date), query will display flights that depart
@@ -1233,7 +1242,6 @@ def staff_search_past():
                             initial_src=src, initial_dst=dst, airline_name=airline_name)
 
 # ---------------------------------change status-------------------------------------------
-
 @app.route('/change_status', methods=['GET', 'POST'])
 def change_status():
     new_status = request.form['status']
@@ -1251,7 +1259,6 @@ def change_status():
     return redirect(url_for('staff_view_flight'))
 
 # ---------------------------------view customers-------------------------------------------
-
 @app.route('/flight_view_customers', methods=['GET','POST'])
 def flight_view_customer():
     airline_name = session['airline_name']
@@ -1272,7 +1279,6 @@ def flight_view_customer():
                             departure_date = departure_date, departure_time = departure_time)
 
 # ---------------------------------add plane-------------------------------------------
-
 @app.route('/go_add_plane')
 def go_add_plane():
     return render_template('staff_add_plane.html')
@@ -1386,6 +1392,7 @@ def add_airport():
 @app.route('/go_view_ratings')
 def go_view_ratings():
     return render_template('staff_view_ratings.html')
+
 
 @app.route('/view_ratings', methods=['GET', 'POST'])
 def view_ratings():
