@@ -6,6 +6,8 @@ from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors, hashlib
 from datetime import timedelta
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 
 app = Flask(__name__)
 app.secret_key = '12345'
@@ -194,7 +196,7 @@ def login():
 
 # customer login route
 @app.route('/customer_login')
-def cust_login():
+def customer_login():
     return render_template('customer_login.html')
 
 # staff login route
@@ -507,7 +509,7 @@ def my_flight():
     now_time = timestamp.time()
     now_date = timestamp.date()
     cursor = connection.cursor()
-    query = 'SELECT * FROM ticket as T, flight as F WHERE T.email=%s AND (T.airline_name,T.flight_number,T.departure_date, \
+    query = 'SELECT DISTINCT * FROM ticket as T, flight as F WHERE T.email=%s AND (T.airline_name,T.flight_number,T.departure_date, \
         T.departure_time) = (F.airline_name,F.flight_number,F.departure_date, \
         F.departure_time)'
     # 'T.airline_name=F.airline_name AND T.flight_number=F.flight_number AND T.departure_date=F.departure_date and T.departure_time=F.departure_time'
@@ -726,7 +728,7 @@ def make_purchase():
     cursor.execute(query, (airline_name, flight_number, departure_date, departure_time))
     ticket = cursor.fetchone()['ticket_id']
     error = None
-    if ticket:
+    if ticket is not None:
         # inputting information for available ticket
         update_ticket = 'UPDATE ticket SET email=%s, card_type=%s, card_number=%s, \
             card_name=%s, exp_date=%s, purchase_time=%s, purchase_date=%s, sold_price=%s \
@@ -808,8 +810,8 @@ def customer_track_spending():
     return render_template('customer_track_spending.html')
 
 
-@app.route('/define_period', methods=['GET', 'POST'])
-def define_period():
+@app.route('/spending_define_period', methods=['GET', 'POST'])
+def spending_define_period():
     period = request.form['period']
     return render_template('customer_track_spending.html', period=period)
 
@@ -998,7 +1000,6 @@ def staff_search_flight():
     
     return render_template('staff_view_flight.html',today_date=valid_date, future=future, available=available, 
                             initial_src=src, initial_dst=dst,airline_name=airline_name)
-
 
 @app.route('/staff_current_flight')
 def staff_current_flight():
@@ -1211,7 +1212,7 @@ def flight_view_customer():
     cursor.execute(query,(airline_name, flight_number, departure_date, departure_time))
     data = cursor.fetchall()
     cursor.close()
-    return render_template('flight_customer_list.html', data = data, flight_number = flight_number,
+    return render_template('staff_flight_customer_list.html', data = data, flight_number = flight_number,
                             departure_date = departure_date, departure_time = departure_time)
 
 # ---------------------------------add plane-------------------------------------------
