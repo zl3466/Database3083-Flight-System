@@ -276,7 +276,6 @@ def staff_loginAuth():
 
 
 # ---------------------------------PUBLIC-------------------------------------------
-
 # public information route
 @app.route('/public_info')
 def public_info():
@@ -569,8 +568,8 @@ def customer_track_spending():
     return render_template('customer_track_spending.html')
 
 
-@app.route('/define_period', methods=['GET', 'POST'])
-def define_period():
+@app.route('/spending_define_period', methods=['GET', 'POST'])
+def spending_define_period():
     period = request.form['period']
     return render_template('customer_track_spending.html', period=period)
 
