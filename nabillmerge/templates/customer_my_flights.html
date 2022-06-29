@@ -24,6 +24,7 @@
         <th>Departure Time</th>
         <th>Arrival Date</th>
         <th>Arrival Time</th>
+        <th>Ticket ID</th>
 
     {% for line in future %}
         <form action="/cancel_flight" method="POST">
@@ -36,6 +37,7 @@
             <td>{{line['F.departure_time']}}</td>
             <td>{{line['arrival_date']}}</td>
             <td>{{line['arrival_time']}}</td>
+            <td>{{line['ticket_id']}}</td>
             <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
             <td><input type="submit" value = Cancel /></td>
         </tr>
@@ -57,6 +59,7 @@
         <th>Departure Time</th>
         <th>Arrival Date</th>
         <th>Arrival Time</th>
+        <th>Ticket ID</th>
 
     {% for line in current %}
         <form action="/cancel_flight" method="POST">
@@ -69,6 +72,7 @@
             <td>{{line['F.departure_time']}}</td>
             <td>{{line['arrival_date']}}</td>
             <td>{{line['arrival_time']}}</td>
+            <td>{{line['ticket_id']}}</td>
             <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
             <td><input type="submit" value = Cancel /></td>
         </tr>
@@ -90,6 +94,7 @@
         <th>Departure Time</th>
         <th>Arrival Date</th>
         <th>Arrival Time</th>
+        <th>Ticket ID</th>
 
     {% for line in past %}
         <form action="/cancel_flight" method="POST">
@@ -102,6 +107,7 @@
             <td>{{line['F.departure_time']}}</td>
             <td>{{line['arrival_date']}}</td>
             <td>{{line['arrival_time']}}</td>
+            <td>{{line['ticket_id']}}</td>
             <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
             <td><input type="submit" value = Cancel /></td>
         </tr>

@@ -19,14 +19,12 @@ connection = pymysql.connect(host = 'localhost',
                              cursorclass = pymysql.cursors.DictCursor)
 
 # ---------------------------------MAIN-------------------------------------------
-
 # main route
 @app.route('/')
 def index():
     return render_template('index.html')
 
 # ---------------------------------REGISTER-------------------------------------------
-
 # register route
 @app.route('/register')
 def register():
@@ -186,7 +184,6 @@ def staff_phones_emails():
     return render_template('index.html')
 
 # ---------------------------------LOGIN-------------------------------------------
-
 # login route
 @app.route('/login')
 def login():
@@ -261,7 +258,6 @@ def staff_loginAuth():
         return render_template('staff_login.html', error = error)
 
 # ---------------------------------PUBLIC-------------------------------------------
-
 # public information route
 @app.route('/public_info')
 def public_info():
@@ -484,7 +480,6 @@ def public_check_status():
     return render_template('public_check_status.html', data=data)
 
 # ---------------------------------CUSTOMER-------------------------------------------
-
 # customer homepage route
 @app.route('/customer_home')
 def customer_home():
@@ -496,7 +491,6 @@ def customer_home():
     return render_template('customer_home.html', name=name)
 
 # ---------------------------------view my flights-------------------------------------------
-
 @app.route('/my_flight', methods=['GET', 'POST'])
 def my_flight():
     email = session['email']
@@ -785,7 +779,6 @@ def make_rate_comment():
 
 
 # ---------------------------------track spending-------------------------------------------
-
 @app.route('/customer_track_spending', methods=['GET', 'POST'])
 def customer_track_spending():
     return render_template('customer_track_spending.html')
