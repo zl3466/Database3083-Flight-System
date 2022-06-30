@@ -234,7 +234,7 @@ def customer_loginAuth():
 
     if (data):
         # checking password
-        if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == password:
+        if data['password'] == password:
             # setting session to current user
             session['email'] = email
             return redirect(url_for('customer_home'))
@@ -263,7 +263,7 @@ def staff_loginAuth():
     error = None
 
     if (data):
-        if hashlib.md5(data['password'].encode('utf-8')).hexdigest() == password:
+        if data['password'] == password:
             session['username'] = username
             session['airline_name'] = data['airline_name']
             return redirect(url_for('staff_home'))
