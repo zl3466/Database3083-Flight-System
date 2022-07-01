@@ -6,7 +6,7 @@ from datetime import timedelta
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-
+# ---------------------------------INIT-------------------------------------------
 app = Flask(__name__)
 app.secret_key = '12345'
 # establishing database connection 
@@ -39,7 +39,6 @@ def customer_register():
 @app.route('/staff_register')
 def staff_register():
     return render_template('staff_register.html')
-
 
 # customer registration authentication route
 # note: pattern similar to staff_registerAuth
@@ -203,7 +202,6 @@ def staff_login():
 # note: similar to staff_loginAuth
 @app.route('/customer_loginAuth', methods=['POST'])
 def customer_loginAuth():
-    #
     email = request.form['email']
     password = request.form['password']
     password = hashlib.md5(password.encode('utf-8')).hexdigest()
@@ -485,7 +483,10 @@ def public_check_status():
     cursor.execute(query, (airline_name, flight_number, departure_date, arrival_date))
     data = cursor.fetchall()
     cursor.close()
-    return render_template('public_check_status.html', data=data)
+    error = None
+    if data is not None:
+        error = "No flights matching query"
+    return render_template('public_check_status.html', data=data, error = error)
 
 # ---------------------------------CUSTOMER-------------------------------------------
 # customer homepage route
@@ -1426,7 +1427,10 @@ def go_frequent_customers():
             'group by email order by count(ticket_id) DESC'
     cursor.execute(query, ('null', airline_name))
     customers = cursor.fetchall()
-    return render_template('staff_view_frequent_customers.html', customers=customers)
+    error = None
+    if not customers:
+        error = 'No Customers On File'
+    return render_template('staff_view_frequent_customers.html', customers=customers, error=error)
 
 
 @app.route('/view_customer_records', methods=['GET', 'POST'])
@@ -1440,82 +1444,83 @@ def view_customer_records():
     return render_template('staff_view_customer_records.html', record=record, email=email)
 
 # ---------------------------------view report-------------------------------------------
+def view_report(session, conn, period):
+    airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    if period == 'specific':
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        query = 'select count(ticket_id) from ticket where airline_name=%s and email!=%s and ' \
+                'purchase_date>%s and purchase_date<%s'
+        cursor = conn.cursor()
+        cursor.execute(query, (airline_name, 'null', start_date, end_date))
+    else:
+        if period == 'month':
+            start_date = valid_date - relativedelta(months=1)
+        elif period == 'year':
+            start_date = valid_date - relativedelta(years=1)
+
+        cursor = conn.cursor()
+        query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
+                '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
+        cursor.execute(query, (airline_name, 'null', start_date, start_date, valid_time))
+
+    data = cursor.fetchone()
+
+    sales_list = []
+    query2 = 'select count(ticket_id) from ticket where airline_name=%s and email!=%s and ' \
+             '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s)) and ' \
+             '((purchase_date<%s) OR (purchase_date=%s and purchase_time<%s))'
+    time_zero = valid_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    for i in range(1, 13):
+        the_month_start = (valid_date - relativedelta(months=i)).replace(day=1)
+        the_month_end = (the_month_start + relativedelta(months=1)).replace(day=1)
+
+        cursor.execute(query2, (airline_name, 'null', the_month_start, the_month_start, time_zero,
+                                the_month_end, the_month_end, time_zero))
+        the_count = cursor.fetchone()
+        date_range = str(the_month_start) + ' to ' + str(the_month_end)
+        if the_count['count(ticket_id)'] is None:
+            the_count = 0
+        else:
+            the_count = the_count['count(ticket_id)']
+        sales_list.insert(0, (date_range, the_count))
+
+    cursor.close()
+    if data['count(ticket_id)']:
+        return render_template('staff_view_reports.html', data=data['count(ticket_id)'], sales_list=sales_list)
+    else:
+        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period', sales_list=sales_list)
+
 @app.route('/go_view_reports')
 def go_view_reports():
     return render_template('staff_view_reports.html')
-
 
 @app.route('/sale_define_period', methods=['GET', 'POST'])
 def sale_define_period():
     period = request.form['period']
     return render_template('staff_view_reports.html', period=period)
 
-
 @app.route('/view_report_month', methods=['GET', 'POST'])
-def view_record_month():
-    airline_name = session['airline_name']
-    timestamp = datetime.now()
-    valid_timestamp = timestamp
-    valid_date = valid_timestamp.date()
-    start_date = valid_date - relativedelta(months=1)
-    cursor = connection.cursor()
-
-    query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
-            'purchase_date>=%s'
-    cursor.execute(query, (airline_name, 'null', start_date))
-    data = cursor.fetchone()
-    cursor.close()
-    if data['count(ticket_id)']:
-        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
-    else:
-        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
-
+def view_report_month():
+    return view_report(session, connection, 'month')
 
 @app.route('/view_report_year', methods=['GET', 'POST'])
-def view_record_year():
-    airline_name = session['airline_name']
-    timestamp = datetime.now()
-    valid_timestamp = timestamp
-    valid_date = valid_timestamp.date()
-    start_date = valid_date - relativedelta(years=1)
-    cursor = connection.cursor()
-
-    query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
-            'purchase_date>=%s'
-    cursor.execute(query, (airline_name, 'null', start_date))
-    data = cursor.fetchone()
-    cursor.close()
-
-    if data['count(ticket_id)']:
-        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
-    else:
-        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
-
+def view_report_year():
+    return view_report(session, connection, 'year')
 
 @app.route('/view_report_specific', methods=['GET', 'POST'])
-def view_record_specific():
-    airline_name = session['airline_name']
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
-    cursor = connection.cursor()
+def view_report_specific():
+    return view_report(session, connection, 'month')
 
-    query = 'SELECT count(ticket_id) FROM ticket WHERE airline_name=%s and email!=%s and ' \
-            'purchase_date>=%s OR purchase_date<=%s'
-    cursor.execute(query, (airline_name, 'null', start_date, end_date))
-    data = cursor.fetchone()
-    cursor.close()
-
-    if data['count(ticket_id)']:
-        return render_template('staff_view_reports.html', data=data['count(ticket_id)'])
-    else:
-        return render_template('staff_view_reports.html', error='No Sales Record in Selected Period')
-
-# ---------------------------------view revenue-------------------------------------------
 @app.route('/go_view_revenue', methods=['GET', 'POST'])
 def go_view_revenue():
     airline_name = session['airline_name']
     timestamp = datetime.now()
-    valid_timestamp = timestamp
+    valid_timestamp = timestamp + timedelta(hours=2)
     valid_time = valid_timestamp.time()
     valid_date = valid_timestamp.date()
     last_month = valid_date - relativedelta(months=1)
@@ -1556,7 +1561,7 @@ def go_view_revenue():
                                annual_revenue=annual_revenue['sum(sold_price)'], revenue_list=revenue_list)
     else:
         return render_template('staff_view_revenue.html', error='Failed to Collect Data')
-
+ 
  # ---------------------------------LOGOUT-------------------------------------------
 @app.route('/customer_logout')
 def customer_logout():

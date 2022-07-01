@@ -58,6 +58,19 @@
     {% elif error %}
         <h3>{{ error }}</h3>
     {% endif %}
+    {% if sales_list %}
+        <h3>Monthly Sale in Past Year</h3>
+            <table>
+                {% for tuple in sales_list %}
+                    <tr>
+                        <td>{{ tuple[0] }}</td>
+                        <td>
+                        <div style='background-color:lightskyblue; width:{{ tuple[1]*10 }}px'>{{ tuple[1] }}</div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+    {% endif %}
     </p>
 
     <a href="/go_view_reports"><button>Select Another Period</button></a> </br>

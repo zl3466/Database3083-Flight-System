@@ -59,7 +59,10 @@
         {% endfor %}
     </table>
     {% endif %}
-    <a href="/publicinfo">Go back</a><br>
-    <a href="/">Main menu</a>
+    {% if error %}
+        <h4>{{error}}</h4>
+    {% endif %}
+    <a href="/public_info"><button>Go back</button></a><br>
+    <a href="/"><button>Main menu</button></a>
 </body>
 </html>

@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style type="text/css">
+        table, th, td{
+            border: 1px solid black;
+        }
+    </style>
 </head>
 <body>
     {% if error %}
         <h2>{{ error }}</h2>
     {% else %}
-        <style type="text/css">
-            table, th, td{
-                border: 1px solid black;
-            }
-        </style>
-        <h2>Total Revenue</h2>
+        <h2>Customers</h2>
         <table>
             <th>Email</th>
             <th>Ticket Count</th>
             <th>Total Spending</th>
-
             {% for line in customers %}
                 <form action="/view_customer_records" method="POST">
                     <tr>
