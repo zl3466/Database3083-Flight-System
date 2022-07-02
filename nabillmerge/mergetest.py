@@ -1,7 +1,7 @@
 from crypt import methods
 from os import times
 from re import A
-from flask import Flask, render_template, request, session, url_for, redirect, flash
+from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors, hashlib
 from datetime import timedelta
 from datetime import datetime
@@ -63,8 +63,8 @@ def is_staff(func):
 @app.route('/deny_access')
 def deny_access():
     clear_session()
-    flash('Access denied. Please login with correct information to proceed.')
-    return redirect(url_for('login'))
+    error = 'Access denied. Please login with correct information to proceed.'
+    return render_template('login.html', error = error)
 
 # ---------------------------------MAIN-------------------------------------------
 # main route
@@ -234,7 +234,7 @@ def staff_phones_emails():
 # login route
 @app.route('/login')
 def login():
-    return render_template('login.html', session = session)
+    return render_template('login.html')
 
 # customer login route
 @app.route('/customer_login')

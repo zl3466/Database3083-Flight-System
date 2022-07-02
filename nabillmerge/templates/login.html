@@ -7,11 +7,9 @@
     <title>Login</title>
 </head>
 <body>
-    {% with error = get_flashed_messages() %}
-        {% if error %}
-            <h4>{{ error[0] }}</h4>
-        {% endif %}
-    {% endwith %}
+    {% if error %}
+        <h4>{{ error}}</h4>
+    {% endif %}
     <a href="/customer_login"><button>Customer login</button></a></br>
     <a href="/staff_login"><button>Staff login</button></a></br>
     <a href="/"><button>Go back</button></a></br>
