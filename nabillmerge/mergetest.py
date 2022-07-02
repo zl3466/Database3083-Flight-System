@@ -239,7 +239,6 @@ def login():
 # customer login route
 @app.route('/customer_login')
 def customer_login():
-    # session = session
     return render_template('customer_login.html')
 
 # staff login route
