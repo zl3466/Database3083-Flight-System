@@ -1,10 +1,12 @@
 from crypt import methods
 from os import times
-from flask import Flask, render_template, request, session, url_for, redirect
+from re import A
+from flask import Flask, render_template, request, session, url_for, redirect, flash
 import pymysql.cursors, hashlib
 from datetime import timedelta
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from functools import wraps
 
 # ---------------------------------INIT-------------------------------------------
 app = Flask(__name__)
@@ -17,6 +19,52 @@ connection = pymysql.connect(host = 'localhost',
                              charset = 'utf8mb4',
                              port = 8889,
                              cursorclass = pymysql.cursors.DictCursor)
+
+# ---------------------------------SECURITY-------------------------------------------
+# helper function to clear session data
+def clear_session():
+    for items in ['email', 'username', 'airline_name', 'role']:
+        try:
+            session.pop(items)
+        except KeyError:
+            pass
+
+# decorator to ensure user is staff (for specific staff views)
+def is_staff(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            role = session['role']
+        except KeyError:
+            return redirect(url_for('deny_access'))
+
+        if role == 'staff':
+            cursor = connection.cursor()
+            query = 'SELECT * FROM staff where username=%s'
+
+            try:
+                username = session['username']
+            except KeyError:
+                cursor.close()
+                return redirect(url_for('deny_access'))
+
+            cursor.execute(query, username)
+            data = cursor.fetchall
+            if data is None:
+                return redirect(url_for('deny_access'))
+
+            return func(*args, **kwargs)
+        
+        else:
+            return redirect(url_for('deny_access'))
+    return wrapper
+
+# route for denied access
+@app.route('/deny_access')
+def deny_access():
+    clear_session()
+    flash('Access denied. Please login with correct information to proceed.')
+    return redirect(url_for('login'))
 
 # ---------------------------------MAIN-------------------------------------------
 # main route
@@ -186,11 +234,12 @@ def staff_phones_emails():
 # login route
 @app.route('/login')
 def login():
-    return render_template('login.html')
+    return render_template('login.html', session = session)
 
 # customer login route
 @app.route('/customer_login')
 def customer_login():
+    # session = session
     return render_template('customer_login.html')
 
 # staff login route
@@ -219,6 +268,7 @@ def customer_loginAuth():
         if data['password'] == password:
             # setting session to current user
             session['email'] = email
+            session['role'] = 'customer'
             return redirect(url_for('customer_home'))
         # case: password does not match --> throw error
         else:
@@ -247,6 +297,7 @@ def staff_loginAuth():
         if data['password'] == password:
             session['username'] = username
             session['airline_name'] = data['airline_name']
+            session['role'] = 'staff'            
             return redirect(url_for('staff_home'))
         else:
             error = "Incorrect password"
@@ -1281,11 +1332,13 @@ def flight_view_customer():
 
 # ---------------------------------add plane-------------------------------------------
 @app.route('/go_add_plane')
+@is_staff
 def go_add_plane():
     return render_template('staff_add_plane.html')
 
 
 @app.route('/add_plane', methods=['GET', 'POST'])
+@is_staff
 def add_plane():
     airline_name = session['airline_name']
     plane_id = request.form['plane_id']
@@ -1308,6 +1361,7 @@ def add_plane():
 
 # ---------------------------------add flight-------------------------------------------
 @app.route('/go_add_flight')
+@is_staff
 def go_add_flight():
     return render_template('staff_add_flight.html')
 
@@ -1324,6 +1378,7 @@ def generateTickets(airline_name, flight_number, departure_date, departure_time,
     return
 
 @app.route('/add_flight', methods=['GET', 'POST'])
+@is_staff
 def add_flight():
     airline_name = session['airline_name']
     flight_number = request.form['flight_number']
@@ -1363,11 +1418,13 @@ def add_flight():
 
 # ---------------------------------add airport-------------------------------------------
 @app.route('/go_add_airport')
+@is_staff
 def go_add_airport():
     return render_template('staff_add_airport.html')
 
 
 @app.route('/add_airport', methods=['GET', 'POST'])
+@is_staff
 def add_airport():
     name = request.form['name']
     city = request.form['city']
@@ -1565,12 +1622,12 @@ def go_view_revenue():
  # ---------------------------------LOGOUT-------------------------------------------
 @app.route('/customer_logout')
 def customer_logout():
-    session.pop('email')
+    clear_session()
     return redirect(url_for('customer_login'))
 
 @app.route('/staff_logout')
 def staff_logout():
-    session.pop('username')
+    clear_session()
     return redirect(url_for('staff_login'))
 
  # ----------------------------------------------------------------------------------
