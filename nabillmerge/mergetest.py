@@ -1516,10 +1516,17 @@ def view_ratings():
 @app.route('/go_frequent_customers', methods=['GET', 'POST'])
 def go_frequent_customers():
     airline_name = session['airline_name']
+    timestamp = datetime.now()
+    valid_timestamp = timestamp + timedelta(hours=2)
+    valid_time = valid_timestamp.time()
+    valid_date = valid_timestamp.date()
+    start_date = valid_date - relativedelta(years=1)
+
     cursor = connection.cursor()
-    query = 'select email, count(ticket_id), sum(sold_price) from ticket where email !=%s and airline_name=%s ' \
+    query = 'select email, count(ticket_id), sum(sold_price) from ticket where email !=%s and airline_name=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))' \
             'group by email order by count(ticket_id) DESC'
-    cursor.execute(query, ('null', airline_name))
+    cursor.execute(query, ('null', airline_name, start_date, start_date, valid_time))
     customers = cursor.fetchall()
     error = None
     if not customers:
