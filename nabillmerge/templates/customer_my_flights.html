@@ -81,7 +81,7 @@
     </table>
     {% endif %}
     {% if not past %}
-    <h5>No past flights</h5>
+        <h5>No past flights</h5>
     {% endif %}
     {%if past %}
     <h3>Past flights</h3>
@@ -97,7 +97,8 @@
         <th>Ticket ID</th>
 
     {% for line in past %}
-        <form action="/cancel_flight" method="POST">
+
+
         <tr>
             <td>{{line['F.airline_name']}}</td>
             <td>{{line['F.flight_number']}}</td>
@@ -108,10 +109,17 @@
             <td>{{line['arrival_date']}}</td>
             <td>{{line['arrival_time']}}</td>
             <td>{{line['ticket_id']}}</td>
+            <form action="/cancel_flight" method="POST">
             <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
             <td><input type="submit" value = Cancel /></td>
+            </form>
+            <form action="/rate_comment" method="POST">
+                <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
+            <td><input type="submit" value = 'Rate/Comment' /></td>
+            </form>
         </tr>
-        </form>
+
+
     {% endfor %}
     </table>
     {% endif %}

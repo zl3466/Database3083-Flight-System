@@ -931,17 +931,19 @@ def make_rate_comment():
     ticket_id = request.form['ticket_id']
     rating = request.form['rating']
     comment = request.form['comment']
-
     cursor = connection.cursor()
+
     if comment is None:
         query = 'update ticket set rating=%s where ticket_id=%s'
         cursor.execute(query, (rating, ticket_id))
     else:
-        query = 'update ticket set rating=%s and comment=%s where ticket_id=%s'
+        query = 'update ticket set rating=%s, comment=%s where ticket_id=%s'
         cursor.execute(query, (rating, comment, ticket_id))
+
+    connection.commit()
     message = 'Thanks for your comment!'
     cursor.close()
-    return render_template('/make_rate_comment', message=message)
+    return render_template('customer_rate_comment.html', message=message)
 
 
 # ---------------------------------track spending-------------------------------------------
