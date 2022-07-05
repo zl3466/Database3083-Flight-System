@@ -968,7 +968,8 @@ def check_spending_month():
     start_date = valid_date - relativedelta(months=1)
     cursor = connection.cursor()
 
-    query = ''
+    query = 'SELECT SUM(sold_price) FROM ticket WHERE email=%s and ' \
+            '((purchase_date>%s) OR (purchase_date=%s and purchase_time>%s))'
     cursor.execute(query, (email, start_date, start_date, valid_time))
     data = cursor.fetchone()
     cursor.close()

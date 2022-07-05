@@ -109,10 +109,6 @@
             <td>{{line['arrival_date']}}</td>
             <td>{{line['arrival_time']}}</td>
             <td>{{line['ticket_id']}}</td>
-            <form action="/cancel_flight" method="POST">
-            <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
-            <td><input type="submit" value = Cancel /></td>
-            </form>
             <form action="/rate_comment" method="POST">
                 <input type="text" name="ticket_id" value="{{line['ticket_id']}}" hidden/>
             <td><input type="submit" value = 'Rate/Comment' /></td>

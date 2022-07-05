@@ -10,7 +10,7 @@
     <form action="/staff_phones_emails" method = 'POST'>
         {% for phone in phones %}
         <br><label for="{{phone}}">Phone number {{phone}}</label>
-        <br><input type="number" name ="{{phone}}" placeholder="123456789" required><br>
+        <br><input type="text" name ="{{phone}}" placeholder="123456789" required><br>
         {% endfor %}
         {% for email in emails %}
         <br><label for="{{email}}">{{email}}</label>
