@@ -163,6 +163,7 @@ def customer_personal_info():
     info_dict = {}
     info_dict['name'] = request.form['name']
     info_dict['building_number'] = request.form['building_number']
+    info_dict['street'] = request.form['street']
     info_dict['city'] = request.form['city']
     info_dict['state'] = request.form['state']
     info_dict['phone_number'] = request.form['phone_number']
